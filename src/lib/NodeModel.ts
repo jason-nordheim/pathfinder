@@ -13,6 +13,7 @@ const NODE_COLORS = {
 type NodeColor = ValueOf<typeof NODE_COLORS>;
 
 const NODE_STATE = {
+  UNPARSED: "Unparsed",
   OPEN: "Open",
   CLOSED: "Closed",
   BARRIER: "Barrier",
@@ -24,6 +25,7 @@ const NODE_STATE = {
 type NodeState = ValueOf<typeof NODE_STATE>;
 
 const NODE_COLOR_MAP: { [k in NodeState]: NodeColor } = {
+  [NODE_STATE.UNPARSED]: NODE_COLORS.WHITE,
   [NODE_STATE.OPEN]: NODE_COLORS.GREEN,
   [NODE_STATE.CLOSED]: NODE_COLORS.RED,
   [NODE_STATE.BARRIER]: NODE_COLORS.BLACK,
@@ -48,15 +50,15 @@ export class NodeModel {
 
   neighbors = [];
 
-  constructor(row: number, column: number, width: number, totalRows: number, totalColumns: number) {
+  constructor(row: number, column: number, width: number, gridSize: number) {
     this.row = row;
     this.column = column;
     this.width = width;
-    this.totalRows = totalRows;
-    this.totalColumns = totalColumns;
+    this.totalRows = gridSize;
+    this.totalColumns = gridSize;
     this.x = row * width;
     this.y = column * width;
-    this.state = NODE_STATE.OPEN;
+    this.state = NODE_STATE.UNPARSED;
   }
 
   setStatus(status: NodeState) {
@@ -72,6 +74,23 @@ export class NodeModel {
   }
 
   reset() {
-    this.state = NODE_STATE.OPEN;
+    this.state = NODE_STATE.UNPARSED;
   }
 }
+
+export const H = (x1: number, y1: number, x2: number, y2: number) => {
+  return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+};
+
+export const makeGrid = (size: number, width: number) => {
+  const grid: NodeModel[][] = [];
+  const gap = Math.floor(width / size);
+  for (let i = 0; i < size; i++) {
+    grid.push([]);
+    for (let j = 0; j < size; j++) {
+      const node = new NodeModel(i, j, gap, size);
+      grid[i].push(node);
+    }
+  }
+  return grid;
+};
