@@ -153,8 +153,6 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
     }
   }, [status]);
 
-  const calculateShortestPath = () => {};
-
   return (
     <div
       id="grid"
