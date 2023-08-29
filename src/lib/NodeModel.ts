@@ -34,7 +34,6 @@ const NODE_COLOR_MAP: { [k in NodeType]: NodeColor } = {
   [NODE_TYPE.PATH]: NODE_COLORS.PURPLE,
 };
 
-// Spot
 export class NodeModel {
   row: number;
   column: number;
