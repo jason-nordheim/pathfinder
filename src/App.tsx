@@ -1,7 +1,7 @@
-import { Graph } from "./components/Graph";
+import { Grid } from "./components/Grid";
 
 function App() {
-  return <Graph />;
+  return <Grid />;
 }
 
 export default App;
