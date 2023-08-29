@@ -36,7 +36,7 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
   const [nodes, setNodes] = useState(() => makeGrid(size, width));
 
   useEffect(() => {
-    const handleSpacePress = (e: KeyboardEvent) => {
+    const handleSpacePress = () => {
       setStatus(STATUS.RUNNING);
     };
     window.addEventListener("keydown", handleSpacePress);
@@ -169,7 +169,7 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
             <GridNode
               key={id}
               model={n}
-              onClick={(e) => {
+              onClick={() => {
                 if (!start && n !== end) {
                   n.setType("Start");
                   setStart(n);
