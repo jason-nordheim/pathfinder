@@ -1,5 +1,5 @@
 import { CSSProperties, FC, MouseEventHandler, useEffect, useId, useMemo, useState } from "react";
-import { HeuristicScore, NodeModel, NodeType, algorithm, makeGrid, makeNodeKey } from "../lib/NodeModel";
+import { HeuristicScore, NodeModel, NodeType, algorithm, makeGrid, makeNodeKey, parseNodeKey } from "../lib/NodeModel";
 import { ValueOf } from "ts-essentials";
 
 const STATUS = {
@@ -73,6 +73,9 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
 
       const changeNodeType = (row: number, column: number, type: NodeType) => {
         setNodes((curr) => {
+          // do not overwrite start and end node
+          if (curr[row][column].type === "Start") return curr;
+          if (curr[row][column].type === "End") return curr;
           curr[row][column].setType(type);
           return curr;
         });
@@ -80,7 +83,6 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
 
       // standardize adding to the queue
       const addNode = (node: NodeModel, count: number, priority: number) => {
-        console.log("adding node", node, count, priority);
         if (node !== start && node !== end) {
           changeNodeType(node.row, node.column, "Open");
         }
@@ -112,6 +114,18 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
 
           if (current == end) {
             // todo: make path
+            let currKey = makeNodeKey(current);
+            while (cameFrom.has(currKey)) {
+              if (currKey) {
+                changeNodeType(current.row, current.column, "Path");
+                const nextKey = cameFrom.get(currKey);
+                if (nextKey) {
+                  const [x, y] = parseNodeKey(nextKey);
+                  changeNodeType(x, y, "Path");
+                  currKey = nextKey;
+                }
+              }
+            }
             setStatus(STATUS.COMPLETE);
             break;
           }
@@ -119,7 +133,6 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
           current.updateNeighbors(nodes);
 
           for (const n of current.neighbors) {
-            console.log({ n });
             const neighborKey = makeNodeKey(n);
             const currentKey = makeNodeKey(current);
             const tentativeScore = gScores.get(currentKey)! + 1;
