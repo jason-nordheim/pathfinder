@@ -1,6 +1,6 @@
 import { ValueOf } from "ts-essentials";
 
-const NODE_COLORS = {
+export const NODE_COLORS = {
   WHITE: "#FFF",
   RED: "#FF0000",
   ORANGE: "#FFA500",

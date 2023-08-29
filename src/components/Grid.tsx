@@ -36,6 +36,10 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
   const [nodes, setNodes] = useState(() => makeGrid(size, width));
 
   useEffect(() => {
+    setNodes(makeGrid(size, width));
+  }, [size, width]);
+
+  useEffect(() => {
     const handleSpacePress = () => {
       setStatus(STATUS.RUNNING);
     };
@@ -145,14 +149,17 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
           }
         }
       }
+      setStatus(STATUS.COMPLETE);
     }
-    setStatus(STATUS.COMPLETE);
   }, [status]);
+
+  const calculateShortestPath = () => {};
 
   return (
     <div
       id="grid"
       style={{
+        position: "relative",
         boxSizing: "border-box",
         display: "block",
         width: width + size * 2,
