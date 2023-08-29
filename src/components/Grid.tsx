@@ -37,15 +37,6 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
 
   useEffect(() => {
     const handleSpacePress = (e: KeyboardEvent) => {
-      if (start && end) {
-        if (e.code === "space") {
-          for (const row of nodes) {
-            for (const n of row) {
-              n.updateNeighbors(nodes);
-            }
-          }
-        }
-      }
       setStatus(STATUS.RUNNING);
     };
     window.addEventListener("keydown", handleSpacePress);
