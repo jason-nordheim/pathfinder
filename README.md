@@ -1,27 +1,22 @@
-# React + TypeScript + Vite
+# Pathfinder
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project implements Dijkstra's Pathfinding Algorithm to find the best path between 2 nodes in a Graph. For simplicity sake, this Graph is represented as a grid.
 
-Currently, two official plugins are available:
+You can find a live demo of the site [here](https://find-best-path.web.app/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Skills/Knowledge demonstrated in this project:
 
-## Expanding the ESLint configuration
+- React (TypeScript)
+  - use of hooks
+  - functional components
+  - props
+- Unit testing using `vitest`
+- JavaScript bundling using `vite`
+- Linting using `eslint`
+- Understanding of data structures
+  - Arrays
+  - Maps
+  - Queues
+  - Sets
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-   },
-```
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+> Note: the initial project was generated via the `vite` react-typescript template. [Read more](vite.README.md)
