@@ -12,7 +12,7 @@ export const NODE_COLORS = {
 
 type NodeColor = ValueOf<typeof NODE_COLORS>;
 
-const NODE_TYPE = {
+export const NODE_TYPE = {
   UNPARSED: "Unparsed",
   OPEN: "Open",
   CLOSED: "Closed",
