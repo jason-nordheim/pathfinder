@@ -1,63 +1,11 @@
 import React, { useState } from "react";
 import "./Grid.css";
-import { Graph, dijkstra } from "../lib/GraphUtils";
+import { Graph, dijkstra, makeNeighbors } from "../lib/GraphUtils";
 
 const numRows = 40;
 const numCols = 60;
 
 type AppStatus = "idle" | "running" | "complete" | "aborted";
-
-const makeNodeKey = (row: number, column: number) => `${row}-${column}`;
-
-const makeNeighbors = (row: number, totalRows: number, column: number, totalColumns: number) => {
-  const left = column - 1;
-  const right = column + 1;
-  const above = row - 1;
-  const below = row + 1;
-
-  const neighbors: { [k: string]: number } = {};
-
-  // nodes to the left
-  if (left >= 0) {
-    const leftKey = makeNodeKey(row, left);
-    neighbors[leftKey] = Infinity;
-    if (above >= 0) {
-      const aboveLeftKey = makeNodeKey(above, left);
-      neighbors[aboveLeftKey] = Infinity;
-    }
-    if (below <= totalRows) {
-      const belowLeft = makeNodeKey(below, left);
-      neighbors[belowLeft] = Infinity;
-    }
-  }
-
-  // nodes to the right
-  if (right <= totalColumns) {
-    const rightKey = makeNodeKey(row, right);
-    neighbors[rightKey] = Infinity;
-    if (above >= 0) {
-      const aboveRight = makeNodeKey(above, right);
-      neighbors[aboveRight] = Infinity;
-    }
-    if (below <= totalRows) {
-      const belowRight = makeNodeKey(below, right);
-      neighbors[belowRight] = Infinity;
-    }
-  }
-
-  // center
-  if (above >= -1) {
-    const aboveKey = makeNodeKey(above, column);
-    neighbors[aboveKey] = Infinity;
-  }
-
-  if (below <= totalColumns) {
-    const belowKey = makeNodeKey(below, column);
-    neighbors[belowKey] = Infinity;
-  }
-
-  return neighbors;
-};
 
 export const Grid: React.FC = () => {
   const [appStatus, setAppStatus] = useState<AppStatus>("idle");
