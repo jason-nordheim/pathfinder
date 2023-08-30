@@ -13,6 +13,7 @@ You can find a live demo of the site [here](https://find-best-path.web.app/)
 - Unit testing using `vitest`
 - JavaScript bundling using `vite`
 - Linting using `eslint`
+- Deployment with Github Actions (to `firebase`)
 - Understanding of data structures
   - Arrays
   - Maps
