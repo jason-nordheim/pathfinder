@@ -1,17 +1,24 @@
 # Pathfinder
 
-This project implements Dijkstra's Pathfinding Algorithm to find the best path between 2 nodes in a Graph. For simplicity sake, this Graph is represented as a grid.
+This project implements Dijkstra's Pathfinding Algorithm to find the best path between 2 nodes in a Graph. For simplicity, this Graph is represented as a grid.
 
 You can find a live demo of the site [here](https://find-best-path.web.app/)
 
 ## Skills/Knowledge demonstrated in this project:
 
+- Web Fundamentals
+  - HTML/CSS
+    - Flex box
+    - CSS Grid
+  - JavaScript/TypeScript
+    - Classes (Object-Oriented Design)
+    - Types
 - React (TypeScript)
-  - use of hooks
-  - functional components
-  - props
+  - Native Hooks
+  - Functional components
+  - Props
 - Unit testing using `vitest`
-- JavaScript bundling using `vite`
+- Module bundling using `vite`
 - Linting using `eslint`
 - Deployment with Github Actions (to `firebase`)
 - Understanding of data structures
@@ -19,5 +26,6 @@ You can find a live demo of the site [here](https://find-best-path.web.app/)
   - Maps
   - Queues
   - Sets
+  - Hashes
 
 > Note: the initial project was generated via the `vite` react-typescript template. [Read more](vite.README.md)
