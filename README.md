@@ -1,6 +1,6 @@
 # Pathfinder
 
-This project implements Dijkstra's Pathfinding Algorithm to find the best path between 2 nodes in a Graph. For simplicity, this Graph is represented as a grid.
+This project implements the A* Pathfinding Algorithm (derived from Dijkstra's algorithm) to find the best path between 2 nodes in a Graph. For simplicity, this Graph is represented as a grid.
 
 You can find a live demo of the site [here](https://find-best-path.web.app/)
 
