@@ -3,6 +3,7 @@ import { GridState, OpenNode, sortPriority } from "./grid.common";
 import { changeNode, initializeGraph, replaceNodes, searchGraph, setBarriers, setStatus } from "./grid.actions";
 import {
   HeuristicScore,
+  KeyedNodePosition,
   NodeModel,
   getNodeNeighbors,
   getNodePosition,
@@ -11,13 +12,13 @@ import {
   makeNodeKey,
 } from "../lib/NodeModel";
 
-const gridMiddleware = createListenerMiddleware<{ grid: GridState }>();
+const gridMiddleware = createListenerMiddleware<GridState>();
 
 /** A* Pathfinding  */
 gridMiddleware.startListening({
   actionCreator: searchGraph,
   effect: async (_, listenerApi) => {
-    const { nodes, delay, end, start, size } = listenerApi.getState().grid;
+    const { nodes, delay, end, start, size } = listenerApi.getState();
     // guard
     if (!end || !start) {
       console.warn("Missing either start or end node");
@@ -146,23 +147,23 @@ gridMiddleware.startListening({
 // });
 
 /** on change of node, check the nodes in the grid and update the barriers */
-// gridMiddleware.startListening({
-//   actionCreator: changeNode,
-//   effect: async (action, listenerApi) => {
-//     const { changes, key } = action.payload;
-//     const barriers: KeyedNodePosition[] = [];
-//     const nodes = listenerApi.getState().grid.nodes;
-//     const targetNode = nodes[key]!;
-//     const updatedNodes = { ...nodes };
-//     Object.values(nodes).forEach((n) => {
-//       if (n.type === "Barrier") {
-//         barriers.push({ ...n });
-//       }
-//     });
-//     updatedNodes[key] = { ...targetNode, ...changes };
-//     listenerApi.dispatch(replaceNodes(updatedNodes));
-//     listenerApi.dispatch(setBarriers(barriers));
-//   },
-// });
+gridMiddleware.startListening({
+  actionCreator: changeNode,
+  effect: async (action, listenerApi) => {
+    const { changes, key } = action.payload;
+    const barriers: KeyedNodePosition[] = [];
+    const nodes = listenerApi.getState().nodes;
+    const targetNode = nodes[key]!;
+    const updatedNodes = { ...nodes };
+    Object.values(nodes).forEach((n) => {
+      if (n.type === "Barrier") {
+        barriers.push({ ...n });
+      }
+    });
+    updatedNodes[key] = { ...targetNode, ...changes };
+    listenerApi.dispatch(replaceNodes(updatedNodes));
+    listenerApi.dispatch(setBarriers(barriers));
+  },
+});
 
 export { gridMiddleware };

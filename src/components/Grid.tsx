@@ -1,6 +1,6 @@
-import { CSSProperties, FC, MouseEventHandler } from "react";
+import { CSSProperties, FC, MouseEventHandler, useEffect } from "react";
 import { NODE_COLOR_MAP, NodeModel, isSameCoordinates } from "../lib/NodeModel";
-import { changeNode, resetNode, useAppDispatch, useAppSelector } from "../state";
+import { changeNode, resetNode, searchGraph, useAppDispatch, useAppSelector } from "../state";
 
 const GridNode: FC<{
   model: NodeModel;
@@ -39,14 +39,24 @@ export const Grid = () => {
   const nodesPerRow = useAppSelector((state) => state.itemsPerRow);
   const nodeSize = Math.floor(size / nodesPerRow);
 
+  useEffect(() => {
+    const findShortestPath = (e: KeyboardEvent) => {
+      if (e.key === " ") {
+        dispatch(searchGraph());
+      }
+    };
+    window.addEventListener("keypress", findShortestPath);
+    return () => window.removeEventListener("keypress", findShortestPath);
+  }, [dispatch]);
+
   const handleNodeSelect = (node: NodeModel) => {
     if (node.key) {
       const isStart = start && isSameCoordinates(node, start);
       const isEnd = end && isSameCoordinates(node, end);
-      if (!start) {
+      if (start === undefined) {
         console.log("setting start", node);
         dispatch(changeNode({ key: node.key, changes: { type: "Start" } }));
-      } else if (!end && !isStart) {
+      } else if (end == undefined && !isStart && !isEnd) {
         dispatch(changeNode({ key: node.key, changes: { type: "End" } }));
       } else if (!isStart && !isEnd) {
         dispatch(changeNode({ key: node.key, changes: { type: "Barrier" } }));

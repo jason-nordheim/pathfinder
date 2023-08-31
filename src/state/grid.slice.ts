@@ -1,4 +1,4 @@
-import { SliceCaseReducers, combineReducers, createReducer, createSlice } from "@reduxjs/toolkit";
+import { SliceCaseReducers, createReducer, createSlice } from "@reduxjs/toolkit";
 import { GridState } from "./grid.common";
 import { changeNode, initializeGraph, replaceNodes, resetNode, setStatus } from "./grid.actions";
 
@@ -30,7 +30,6 @@ export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => 
       state.itemsPerRow = action.payload.numPerRow;
     })
     .addCase(changeNode, (state, action) => {
-      console.log("changeNode", action);
       const { key, changes } = action.payload;
       // merge the changes with the initial properties
       const initialNode = state.nodes[key];
@@ -38,8 +37,9 @@ export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => 
       state.nodes[key] = updatedNode;
 
       if (changes.type && changes.type === "Start") {
-        console.log("setting start");
         state.start = updatedNode;
+      } else if (changes.type && changes.type === "End") {
+        state.end = updatedNode;
       }
     })
     .addCase(replaceNodes, (state, action) => {

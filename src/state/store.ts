@@ -1,12 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { gridReducer, gridSlice } from "./grid.slice";
-import { gridMiddleware } from "./grid.middleware";
+import { gridReducer } from "./grid.slice";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
-import { GridState } from ".";
+import { GridState } from "./grid.common";
+import { gridMiddleware } from "./grid.middleware";
 
 const store = configureStore({
   reducer: gridReducer,
-  // middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(gridMiddleware.middleware),
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().prepend(gridMiddleware.middleware),
 });
 
 const useAppSelector: TypedUseSelectorHook<GridState> = useSelector;
