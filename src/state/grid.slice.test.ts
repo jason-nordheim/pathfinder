@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { DEFAULT_STATE, changeNode, gridSlice } from ".";
+import { DEFAULT_STATE, gridReducer } from "./grid.slice";
+import { changeNode } from "./grid.actions";
+import { NODE_TYPE } from "../lib/NodeModel";
 
 describe("Grid Slice", () => {
-  it("updates node changes correctly", () => {
+  it.each(Object.values(NODE_TYPE))("updates node changes correctly for type: %s", (type) => {
     const key = "0_1";
-    const state = gridSlice.reducer(DEFAULT_STATE, changeNode({ key, changes: { type: "Start" } }));
-    console.log(state.nodes[key]);
-    expect(state.nodes[key]).toHaveProperty("type", "Start");
+    const state = gridReducer(DEFAULT_STATE, changeNode({ key, changes: { type } }));
+    expect(state.nodes[key]).toHaveProperty("type", type);
   });
 });
