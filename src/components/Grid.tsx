@@ -24,8 +24,17 @@ const GridNode: FC<{ model: NodeModel; onClick: MouseEventHandler; onContextMenu
     width: model.width,
     backgroundColor: model.getColor(),
     border: "1px solid gray",
+    transition: "all",
   };
-  return <div className="node" style={style} onClick={onClick} onContextMenu={onContextMenu}></div>;
+  return (
+    <div
+      className="node"
+      aria-label={`node-${model.x}-${model.y}`}
+      style={style}
+      onClick={onClick}
+      onContextMenu={onContextMenu}
+    ></div>
+  );
 };
 
 export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
@@ -44,7 +53,6 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
       setStatus(STATUS.RUNNING);
     };
     window.addEventListener("keydown", handleSpacePress);
-
     return () => window.removeEventListener("keydown", handleSpacePress);
   }, []);
 
@@ -164,6 +172,7 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
         height: width + size * 2,
         gridTemplateRows: "auto",
         gridTemplateColumns: "auto",
+        transition: "all",
         gap: "0px",
       }}
     >
