@@ -56,8 +56,8 @@ const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => {
     state.grid.end = undefined;
   });
   builder.addCase(changeNode, (state, action) => {
-    const { x, y, changes } = action.payload;
-    state.grid.nodes[x][y] = mergeRight(state.grid.nodes[x][y], changes);
+    const { row, column, changes } = action.payload;
+    state.grid.nodes[row][column] = mergeRight(state.grid.nodes[row][column], changes);
   });
   builder.addCase(replaceNodes, (state, action) => {
     state.grid.nodes = action.payload;
@@ -78,7 +78,7 @@ const listenerMiddleware = createListenerMiddleware<GridState>();
 listenerMiddleware.startListening({
   actionCreator: searchGraph,
   effect: async (_, listenerApi) => {
-    const { nodes, barriers, delay, status, end, start, delay } = listenerApi.getState().grid;
+    const { nodes, delay, end, start } = listenerApi.getState().grid;
     // guard
     if (!end || !start) {
       console.warn("Missing either start or end node");
@@ -87,7 +87,7 @@ listenerMiddleware.startListening({
 
     listenerApi.dispatch(setStatus("working"));
 
-    const count = 0;
+    let count = 0;
     const openNodes: OpenNode[] = [];
     const openSet = new Set<NodeModel>();
     const cameFrom = new Map<string, string>();
@@ -134,21 +134,49 @@ listenerMiddleware.startListening({
         const current = openNode.model;
         openSet.delete(current);
 
+        // we've found the target node
         if (isSameCoordinates(current, end)) {
-          // we've reached the target node
-          let currentKey = makeNodeKey(current);
-          while (cameFrom.has(currentKey)) {
-            listenerApi.delay(delay); 
+          let currentKey: string | undefined = makeNodeKey(current);
+          while (currentKey && cameFrom.has(currentKey)) {
+            listenerApi.delay(delay);
             const isStartOrEnd = isSameCoordinates(start, current) || isSameCoordinates(end, current);
             if (!isStartOrEnd) {
-              listenerApi.dispatch(changeNode({ row: current.row, column: current.column, changes: { type: 'Path'}}))
+              listenerApi.dispatch(changeNode({ row: current.row, column: current.column, changes: { type: "Path" } }));
             }
             const nextKey = cameFrom.get(currentKey);
-            
+            currentKey = nextKey;
           }
+          setStatus("finished");
+          return;
+        }
+
+        // have not reached the target node yet
+        const currentKey = makeNodeKey(current);
+
+        // inspect neighbors
+        current.updateNeighbors(nodes);
+        for (const n of current.neighbors) {
+          const neighborKey = makeNodeKey(n);
+          const tentativeScore = gScores.get(currentKey)! + 1;
+          if (tentativeScore < gScores.get(neighborKey)!) {
+            cameFrom.set(neighborKey, currentKey);
+            gScores.set(neighborKey, tentativeScore);
+            const [x1, y1] = n.getPosition();
+            const [x2, y2] = end.getPosition();
+            fScores.set(neighborKey, tentativeScore + HeuristicScore(x1, y1, x2, y2));
+            if (openSet.has(n)) {
+              count++;
+              addNode;
+            }
+          }
+        }
+
+        if (!isSameCoordinates(current, start)) {
+          listenerApi.dispatch(changeNode({ row: current.row, column: current.column, changes: { type: "Closed" } }));
         }
       }
     }
+    setStatus("finished");
   },
 });
 
