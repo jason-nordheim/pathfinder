@@ -19,44 +19,47 @@ const DEFAULT_STATE: GridState = {
 };
 
 export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => {
-  builder.addCase(initializeGraph, (state, action) => {
-    state.status = "idle";
-    state.barriers = [];
-    state.start = undefined;
-    state.end = undefined;
-    state.size = action.payload.gridWidth;
-    state.itemsPerRow = action.payload.numPerRow;
-  });
-  builder.addCase(changeNode, (state, action) => {
-    console.log("changeNode");
-    const { key, changes } = action.payload;
-    // merge the changes with the initial properties
-    const initialNode = state.nodes[key];
-    const updatedNode = mergeRight(initialNode, changes);
-    state.nodes[key] = updatedNode;
+  return builder
+    .addCase(initializeGraph, (state, action) => {
+      console.log("initialize");
+      state.status = "idle";
+      state.barriers = [];
+      state.start = undefined;
+      state.end = undefined;
+      state.size = action.payload.gridWidth;
+      state.itemsPerRow = action.payload.numPerRow;
+    })
+    .addCase(changeNode, (state, action) => {
+      console.log("changeNode", action);
+      const { key, changes } = action.payload;
+      // merge the changes with the initial properties
+      const initialNode = state.nodes[key];
+      const updatedNode = { ...initialNode, ...changes };
+      state.nodes[key] = updatedNode;
 
-    if (changes.type && changes.type === "Start") {
-      state.start = updatedNode;
-    }
-  });
-  builder.addCase(replaceNodes, (state, action) => {
-    state.nodes = action.payload;
-  });
-  builder.addCase(setStatus, (state, action) => {
-    state.status = action.payload;
-  });
-  builder.addCase(resetNode, (state, action) => {
-    const key = action.payload;
-    const { size, itemsPerRow } = state;
-    const node = state.nodes[key];
-    if (!node) {
-      console.warn("Reset Node Failed: Cannot find node");
-      return;
-    }
-    const nodeSize = Math.floor(size / itemsPerRow);
-    const [row, col] = parseNodeKey(key);
-    state.nodes[key] = initializeNodeModel(row, col, nodeSize);
-  });
+      if (changes.type && changes.type === "Start") {
+        console.log("setting start");
+        state.start = updatedNode;
+      }
+    })
+    .addCase(replaceNodes, (state, action) => {
+      state.nodes = action.payload;
+    })
+    .addCase(setStatus, (state, action) => {
+      state.status = action.payload;
+    })
+    .addCase(resetNode, (state, action) => {
+      const key = action.payload;
+      const { size, itemsPerRow } = state;
+      const node = state.nodes[key];
+      if (!node) {
+        console.warn("Reset Node Failed: Cannot find node");
+      } else {
+        const nodeSize = Math.floor(size / itemsPerRow);
+        const [row, col] = parseNodeKey(key);
+        state.nodes[key] = initializeNodeModel(row, col, nodeSize);
+      }
+    });
 });
 
 export const gridSlice = createSlice<GridState, SliceCaseReducers<GridState>, "grid">({

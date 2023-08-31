@@ -40,24 +40,24 @@ export const Grid = () => {
   const nodeSize = Math.floor(size / nodesPerRow);
 
   const handleNodeSelect = (node: NodeModel) => {
-    const isStart = start && isSameCoordinates(node, start);
-    const isEnd = end && isSameCoordinates(node, end);
-    if (!start) {
-      //node.setType('Start')
-      console.log("setting start");
-      dispatch(changeNode({ key: node.key, changes: { type: "Start" } }));
-    } else if (!end && !isStart) {
-      //node.setType('End')
-      dispatch(changeNode({ key: node.key, changes: { type: "End" } }));
-    } else if (!isStart && !isEnd) {
-      //node.setType('End')
-      dispatch(changeNode({ key: node.key, changes: { type: "Barrier" } }));
+    if (node.key) {
+      const isStart = start && isSameCoordinates(node, start);
+      const isEnd = end && isSameCoordinates(node, end);
+      if (!start) {
+        console.log("setting start", node);
+        dispatch(changeNode({ key: node.key, changes: { type: "Start" } }));
+      } else if (!end && !isStart) {
+        dispatch(changeNode({ key: node.key, changes: { type: "End" } }));
+      } else if (!isStart && !isEnd) {
+        dispatch(changeNode({ key: node.key, changes: { type: "Barrier" } }));
+      }
     }
   };
 
   const handleNodeDeSelect = (node: NodeModel) => {
-    // node.reset();
-    dispatch(resetNode(node.key));
+    if (node.key) {
+      dispatch(resetNode(node.key));
+    }
   };
 
   return (

@@ -3,7 +3,6 @@ import { GridState, OpenNode, sortPriority } from "./grid.common";
 import { changeNode, initializeGraph, replaceNodes, searchGraph, setBarriers, setStatus } from "./grid.actions";
 import {
   HeuristicScore,
-  KeyedNodePosition,
   NodeModel,
   getNodeNeighbors,
   getNodePosition,
@@ -155,12 +154,12 @@ gridMiddleware.startListening({
 //     const nodes = listenerApi.getState().grid.nodes;
 //     const targetNode = nodes[key]!;
 //     const updatedNodes = { ...nodes };
-//     Object.forEach((n) => {
+//     Object.values(nodes).forEach((n) => {
 //       if (n.type === "Barrier") {
 //         barriers.push({ ...n });
 //       }
 //     });
-//     updatedNodes.set(key, { ...targetNode, ...changes });
+//     updatedNodes[key] = { ...targetNode, ...changes };
 //     listenerApi.dispatch(replaceNodes(updatedNodes));
 //     listenerApi.dispatch(setBarriers(barriers));
 //   },
