@@ -117,3 +117,9 @@ export const makeGrid = (size: number, width: number) => {
 export const makeNodeKey = (node: NodeModel) => `${node.row}_${node.column}`;
 
 export const parseNodeKey = (key: string) => key.split("_").map((str) => Number(str));
+
+export const isSameCoordinates = (a: NodeModel, b: NodeModel) => {
+  const matchingRow = a.row == b.row;
+  const matchingCol = a.column == b.column;
+  return matchingRow && matchingCol;
+};
