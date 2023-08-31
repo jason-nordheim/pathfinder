@@ -1,4 +1,5 @@
 import { ValueOf } from "ts-essentials";
+import { GridGraph } from "../state";
 
 export const NODE_COLORS = {
   WHITE: "#FFF",
@@ -34,16 +35,18 @@ export const NODE_COLOR_MAP: { [k in NodeType]: NodeColor } = {
   [NODE_TYPE.PATH]: NODE_COLORS.PURPLE,
 };
 
-export type NodeModel = {
-  row: number;
-  column: number;
+export type NodePosition = { row: number; column: number };
+export type NodeModel = NodePosition & {
+  key: string;
   size: number;
   x: number;
   y: number;
   type: NodeType;
 };
+export type KeyedNodePosition = NodePosition & { key: string };
 
 export const initializeNodeModel = (row: number, column: number, size: number): NodeModel => ({
+  key: makeNodeKey({ row, column }),
   row,
   column,
   size,
@@ -52,23 +55,42 @@ export const initializeNodeModel = (row: number, column: number, size: number): 
   type: NODE_TYPE.UNPARSED,
 });
 
-export const getNodeNeighbors = (node: NodeModel, grid: NodeModel[][]) => {
+export const getNodeNeighbors = (node: NodeModel, grid: GridGraph, gridSize: number) => {
   const neighbors = [];
-  const gridSize = grid.length;
-  if (node.row < gridSize - 1 && grid[node.row + 1][node.column].type !== "Barrier") {
-    neighbors.push(grid[node.row + 1][node.column]);
+  const [row, column] = parseNodeKey(node.key);
+  const coordinates = {
+    above: { row: row + 1, column },
+    below: { row: row - 1, column },
+    right: { row, column: column + 1 },
+    left: { row, column: column - 1 },
+  };
+  const keys = {
+    above: makeNodeKey(coordinates.above),
+    below: makeNodeKey(coordinates.below),
+    right: makeNodeKey(coordinates.right),
+    left: makeNodeKey(coordinates.left),
+  };
+  const nodes = {
+    above: grid[keys.above],
+    below: grid[keys.below],
+    right: grid[keys.right],
+    left: grid[keys.left],
+  };
+  // down
+  if (node.row < gridSize - 1 && nodes.below?.type !== "Barrier") {
+    neighbors.push(nodes.below);
   }
   // up
-  if (node.row > 0 && grid[node.row - 1][node.column].type !== "Barrier") {
-    neighbors.push(grid[node.row - 1][node.column]);
+  if (node.row > 0 && nodes.above?.type !== "Barrier") {
+    neighbors.push(nodes.above);
   }
   // right
-  if (node.column < gridSize - 1 && grid[node.row][node.column + 1].type !== "Barrier") {
-    neighbors.push(grid[node.row][node.column + 1]);
+  if (node.column < gridSize - 1 && nodes.right?.type !== "Barrier") {
+    neighbors.push(nodes.right);
   }
   // left
-  if (node.column > 0 && grid[node.row][node.column - 1].type !== "Barrier") {
-    neighbors.push(grid[node.row][node.column - 1]);
+  if (node.column > 0 && nodes.left?.type !== "Barrier") {
+    neighbors.push(nodes.left);
   }
   return neighbors;
 };
@@ -77,28 +99,26 @@ export const HeuristicScore = (x1: number, y1: number, x2: number, y2: number) =
   return Math.abs(x1 - x2) + Math.abs(y1 - y2);
 };
 
-export const makeGrid = (itemsPerRow: number, gridSize: number) => {
-  const grid: NodeModel[][] = [];
-  console.log({ gridSize, itemsPerRow });
+export const makeGridGraph = (itemsPerRow: number, gridSize: number) => {
+  const grid: GridGraph = {};
   const gap = Math.floor(gridSize / itemsPerRow);
   for (let i = 0; i < itemsPerRow; i++) {
-    grid.push([]);
     for (let j = 0; j < itemsPerRow; j++) {
       const node = initializeNodeModel(i, j, gap);
-      grid[i].push(node);
+      grid[node.key] = node;
     }
   }
   return grid;
 };
 
-export const makeNodeKey = (node: NodeModel) => `${node.row}_${node.column}`;
+export const makeNodeKey = (node: NodePosition) => `${node.row}_${node.column}`;
 
 export const parseNodeKey = (key: string) => key.split("_").map((str) => Number(str));
 
-export const isSameCoordinates = (a: NodeModel, b: NodeModel) => {
+export const isSameCoordinates = (a: NodePosition, b: NodePosition) => {
   const matchingRow = a.row == b.row;
   const matchingCol = a.column == b.column;
   return matchingRow && matchingCol;
 };
 
-export const getNodePosition = (node: NodeModel) => [node.row, node.column];
+export const getNodePosition = (node: NodePosition) => [node.row, node.column];

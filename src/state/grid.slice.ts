@@ -2,13 +2,13 @@ import { SliceCaseReducers, createReducer, createSlice } from "@reduxjs/toolkit"
 import { GridState } from "./grid.common";
 import { changeNode, initializeGraph, replaceNodes, resetNode, setStatus } from "./grid.actions";
 import { mergeRight } from "rambda";
-import { initializeNodeModel, makeGrid } from "../lib/NodeModel";
+import { initializeNodeModel, makeGridGraph, parseNodeKey } from "../lib/NodeModel";
 
 export const DEFAULT_NODES_PER_ROW = 40;
 export const DEFAULT_GRID_WIDTH = 550;
 
 const DEFAULT_STATE: GridState = {
-  nodes: makeGrid(DEFAULT_NODES_PER_ROW, DEFAULT_GRID_WIDTH),
+  nodes: makeGridGraph(DEFAULT_NODES_PER_ROW, DEFAULT_GRID_WIDTH),
   barriers: [],
   start: undefined,
   end: undefined,
@@ -29,9 +29,15 @@ export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => 
   });
   builder.addCase(changeNode, (state, action) => {
     console.log("changeNode");
-    const { row, column, changes } = action.payload;
-    console.log({ changes });
-    state.nodes[row][column] = mergeRight(state.nodes[row][column], changes);
+    const { key, changes } = action.payload;
+    // merge the changes with the initial properties
+    const initialNode = state.nodes[key];
+    const updatedNode = mergeRight(initialNode, changes);
+    state.nodes[key] = updatedNode;
+
+    if (changes.type && changes.type === "Start") {
+      state.start = updatedNode;
+    }
   });
   builder.addCase(replaceNodes, (state, action) => {
     state.nodes = action.payload;
@@ -40,10 +46,16 @@ export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => 
     state.status = action.payload;
   });
   builder.addCase(resetNode, (state, action) => {
-    const { row, column } = action.payload;
+    const key = action.payload;
     const { size, itemsPerRow } = state;
+    const node = state.nodes[key];
+    if (!node) {
+      console.warn("Reset Node Failed: Cannot find node");
+      return;
+    }
     const nodeSize = Math.floor(size / itemsPerRow);
-    state.nodes[row][column] = initializeNodeModel(row, column, nodeSize);
+    const [row, col] = parseNodeKey(key);
+    state.nodes[key] = initializeNodeModel(row, col, nodeSize);
   });
 });
 

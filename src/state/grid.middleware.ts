@@ -3,11 +3,12 @@ import { GridState, OpenNode, sortPriority } from "./grid.common";
 import { changeNode, initializeGraph, replaceNodes, searchGraph, setBarriers, setStatus } from "./grid.actions";
 import {
   HeuristicScore,
+  KeyedNodePosition,
   NodeModel,
   getNodeNeighbors,
   getNodePosition,
   isSameCoordinates,
-  makeGrid,
+  makeGridGraph,
   makeNodeKey,
 } from "../lib/NodeModel";
 
@@ -17,7 +18,7 @@ const gridMiddleware = createListenerMiddleware<{ grid: GridState }>();
 gridMiddleware.startListening({
   actionCreator: searchGraph,
   effect: async (_, listenerApi) => {
-    const { nodes, delay, end, start } = listenerApi.getState().grid;
+    const { nodes, delay, end, start, size } = listenerApi.getState().grid;
     // guard
     if (!end || !start) {
       console.warn("Missing either start or end node");
@@ -34,12 +35,10 @@ gridMiddleware.startListening({
     const fScores = new Map<string, number>();
 
     // setup Infinity as default values for all nodes
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = 0; j < nodes[i].length; j++) {
-        const key = makeNodeKey(nodes[i][j]);
-        gScores.set(key, Infinity);
-        fScores.set(key, Infinity);
-      }
+    const allNodes = Object.values(nodes);
+    for (const node of allNodes) {
+      gScores.set(node.key, Infinity);
+      fScores.set(node.key, Infinity);
     }
 
     // standardize adding to the queue
@@ -47,7 +46,7 @@ gridMiddleware.startListening({
       const notStartPos = !isSameCoordinates(start!, node);
       const notEndPos = !isSameCoordinates(end!, node);
       if (notStartPos && notEndPos) {
-        listenerApi.dispatch(changeNode({ row: node.row, column: node.column, changes: { type: "Open" } }));
+        listenerApi.dispatch(changeNode({ key: node.key, changes: { type: "Open" } }));
       }
       openSet.add(node);
       openNodes.push({ model: node, count, priority });
@@ -56,7 +55,7 @@ gridMiddleware.startListening({
     };
 
     // start
-    addNode(start, count, 0);
+    addNode(nodes[start.key]!, count, 0);
 
     // set the g score for the start node
     const startKey = makeNodeKey(start);
@@ -75,12 +74,12 @@ gridMiddleware.startListening({
 
         // we've found the target node
         if (isSameCoordinates(current, end)) {
-          let currentKey: string | undefined = makeNodeKey(current);
+          let currentKey: string | undefined = current.key;
           while (currentKey && cameFrom.has(currentKey)) {
             listenerApi.delay(delay);
             const isStartOrEnd = isSameCoordinates(start, current) || isSameCoordinates(end, current);
             if (!isStartOrEnd) {
-              listenerApi.dispatch(changeNode({ row: current.row, column: current.column, changes: { type: "Path" } }));
+              listenerApi.dispatch(changeNode({ key: current.key, changes: { type: "Path" } }));
             }
             const nextKey = cameFrom.get(currentKey);
             currentKey = nextKey;
@@ -93,16 +92,15 @@ gridMiddleware.startListening({
         const currentKey = makeNodeKey(current);
 
         // inspect neighbors
-        const neighbors = getNodeNeighbors(current, nodes);
+        const neighbors = getNodeNeighbors(current, nodes, size);
         for (const n of neighbors) {
-          const neighborKey = makeNodeKey(n);
           const tentativeScore = gScores.get(currentKey)! + 1;
-          if (tentativeScore < gScores.get(neighborKey)!) {
-            cameFrom.set(neighborKey, currentKey);
-            gScores.set(neighborKey, tentativeScore);
+          if (tentativeScore && n?.key && tentativeScore < gScores.get(n?.key)!) {
+            cameFrom.set(n.key, currentKey);
+            gScores.set(n.key, tentativeScore);
             const [x1, y1] = getNodePosition(n);
             const [x2, y2] = getNodePosition(end);
-            fScores.set(neighborKey, tentativeScore + HeuristicScore(x1, y1, x2, y2));
+            fScores.set(n.key, tentativeScore + HeuristicScore(x1, y1, x2, y2));
             if (openSet.has(n)) {
               count++;
               addNode;
@@ -111,7 +109,7 @@ gridMiddleware.startListening({
         }
 
         if (!isSameCoordinates(current, start)) {
-          listenerApi.dispatch(changeNode({ row: current.row, column: current.column, changes: { type: "Closed" } }));
+          listenerApi.dispatch(changeNode({ key: current.key, changes: { type: "Closed" } }));
         }
       }
     }
@@ -127,7 +125,7 @@ gridMiddleware.startListening({
   actionCreator: initializeGraph,
   effect: async (action, listenerApi) => {
     const { gridWidth, numPerRow } = action.payload;
-    const nodes = makeGrid(numPerRow, gridWidth);
+    const nodes = makeGridGraph(numPerRow, gridWidth);
     listenerApi.dispatch(replaceNodes(nodes));
   },
 });
@@ -149,22 +147,23 @@ gridMiddleware.startListening({
 // });
 
 /** on change of node, check the nodes in the grid and update the barriers */
-gridMiddleware.startListening({
-  actionCreator: changeNode,
-  effect: async (action, listenerApi) => {
-    if (action.payload.changes?.type === "Barrier") {
-      const nodes = listenerApi.getState().grid.grid.nodes;
-      const barriers: NodeModel[] = [];
-      nodes.forEach((row) => {
-        row.forEach((node) => {
-          if (node.type === "Barrier") {
-            barriers.push(node);
-          }
-        });
-      });
-      listenerApi.dispatch(setBarriers(barriers));
-    }
-  },
-});
+// gridMiddleware.startListening({
+//   actionCreator: changeNode,
+//   effect: async (action, listenerApi) => {
+//     const { changes, key } = action.payload;
+//     const barriers: KeyedNodePosition[] = [];
+//     const nodes = listenerApi.getState().grid.nodes;
+//     const targetNode = nodes[key]!;
+//     const updatedNodes = { ...nodes };
+//     Object.forEach((n) => {
+//       if (n.type === "Barrier") {
+//         barriers.push({ ...n });
+//       }
+//     });
+//     updatedNodes.set(key, { ...targetNode, ...changes });
+//     listenerApi.dispatch(replaceNodes(updatedNodes));
+//     listenerApi.dispatch(setBarriers(barriers));
+//   },
+// });
 
 export { gridMiddleware };

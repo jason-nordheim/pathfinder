@@ -1,5 +1,5 @@
 import { CSSProperties, FC, MouseEventHandler } from "react";
-import { NODE_COLOR_MAP, NodeModel, isSameCoordinates, makeNodeKey } from "../lib/NodeModel";
+import { NODE_COLOR_MAP, NodeModel, isSameCoordinates } from "../lib/NodeModel";
 import { changeNode, resetNode, useAppDispatch, useAppSelector } from "../state";
 
 const GridNode: FC<{
@@ -45,22 +45,20 @@ export const Grid = () => {
     if (!start) {
       //node.setType('Start')
       console.log("setting start");
-      dispatch(changeNode({ row: node.row, column: node.column, changes: { type: "Start" } }));
+      dispatch(changeNode({ key: node.key, changes: { type: "Start" } }));
     } else if (!end && !isStart) {
       //node.setType('End')
-      dispatch(changeNode({ row: node.row, column: node.column, changes: { type: "End" } }));
+      dispatch(changeNode({ key: node.key, changes: { type: "End" } }));
     } else if (!isStart && !isEnd) {
       //node.setType('End')
-      dispatch(changeNode({ row: node.row, column: node.column, changes: { type: "Barrier" } }));
+      dispatch(changeNode({ key: node.key, changes: { type: "Barrier" } }));
     }
   };
 
   const handleNodeDeSelect = (node: NodeModel) => {
     // node.reset();
-    dispatch(resetNode(node));
+    dispatch(resetNode(node.key));
   };
-
-  console.log({ columnSize: nodes.length, size });
 
   return (
     <div
@@ -77,23 +75,20 @@ export const Grid = () => {
         gap: "0px",
       }}
     >
-      {nodes.map((row) =>
-        row.map((n) => {
-          const id = makeNodeKey(n);
-          return (
-            <GridNode
-              key={id}
-              model={n}
-              size={nodeSize}
-              onClick={() => handleNodeSelect(n)}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                handleNodeDeSelect(n);
-              }}
-            />
-          );
-        })
-      )}
+      {Object.values(nodes).map((node) => {
+        return (
+          <GridNode
+            key={node.key}
+            model={node}
+            size={nodeSize}
+            onClick={() => handleNodeSelect(node)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              handleNodeDeSelect(node);
+            }}
+          />
+        );
+      })}
     </div>
   );
 };
