@@ -1,10 +1,19 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { GridState, OpenNode, sortPriority } from "./grid.common";
-import { changeNode, initializeGraph, replaceNodes, searchGraph, setStatus } from "./grid.actions";
-import { HeuristicScore, NodeModel, isSameCoordinates, makeGrid, makeNodeKey } from "../lib/NodeModel";
+import { changeNode, initializeGraph, replaceNodes, searchGraph, setBarriers, setStatus } from "./grid.actions";
+import {
+  HeuristicScore,
+  NodeModel,
+  getNodeNeighbors,
+  getNodePosition,
+  isSameCoordinates,
+  makeGrid,
+  makeNodeKey,
+} from "../lib/NodeModel";
 
 const gridMiddleware = createListenerMiddleware<{ grid: GridState }>();
 
+/** A* Pathfinding  */
 gridMiddleware.startListening({
   actionCreator: searchGraph,
   effect: async (_, listenerApi) => {
@@ -54,8 +63,8 @@ gridMiddleware.startListening({
     gScores.set(startKey, 0);
 
     // estimate the distance from the start node to the end node
-    const [x1, y1] = start.getPosition();
-    const [x2, y2] = end.getPosition();
+    const [x1, y1] = getNodePosition(start);
+    const [x2, y2] = getNodePosition(end);
     fScores.set(startKey, HeuristicScore(x1, y1, x2, y2));
 
     while (openNodes.length) {
@@ -84,15 +93,15 @@ gridMiddleware.startListening({
         const currentKey = makeNodeKey(current);
 
         // inspect neighbors
-        current.updateNeighbors(nodes);
-        for (const n of current.neighbors) {
+        const neighbors = getNodeNeighbors(current, nodes);
+        for (const n of neighbors) {
           const neighborKey = makeNodeKey(n);
           const tentativeScore = gScores.get(currentKey)! + 1;
           if (tentativeScore < gScores.get(neighborKey)!) {
             cameFrom.set(neighborKey, currentKey);
             gScores.set(neighborKey, tentativeScore);
-            const [x1, y1] = n.getPosition();
-            const [x2, y2] = end.getPosition();
+            const [x1, y1] = getNodePosition(n);
+            const [x2, y2] = getNodePosition(end);
             fScores.set(neighborKey, tentativeScore + HeuristicScore(x1, y1, x2, y2));
             if (openSet.has(n)) {
               count++;
@@ -110,12 +119,51 @@ gridMiddleware.startListening({
   },
 });
 
+/** on initialize graph, recreate the nodes:
+ *  executed as an effect to run async as this could
+ *  execute slowly if the graph is large enough
+ */
 gridMiddleware.startListening({
   actionCreator: initializeGraph,
   effect: async (action, listenerApi) => {
-    const { size, width } = action.payload;
-    const nodes = makeGrid(size, width);
+    const { gridWidth, numPerRow } = action.payload;
+    const nodes = makeGrid(numPerRow, gridWidth);
     listenerApi.dispatch(replaceNodes(nodes));
+  },
+});
+
+/** check for barriers when replacing nodes */
+// gridMiddleware.startListening({
+//   actionCreator: replaceNodes,
+//   effect: async (action, listenerApi) => {
+//     const barriers: NodeModel[] = [];
+//     action.payload.forEach((row) => {
+//       row.forEach((node) => {
+//         if (node.type === "Barrier") {
+//           barriers.push(node);
+//         }
+//       });
+//     });
+//     listenerApi.dispatch(setBarriers(barriers));
+//   },
+// });
+
+/** on change of node, check the nodes in the grid and update the barriers */
+gridMiddleware.startListening({
+  actionCreator: changeNode,
+  effect: async (action, listenerApi) => {
+    if (action.payload.changes?.type === "Barrier") {
+      const nodes = listenerApi.getState().grid.grid.nodes;
+      const barriers: NodeModel[] = [];
+      nodes.forEach((row) => {
+        row.forEach((node) => {
+          if (node.type === "Barrier") {
+            barriers.push(node);
+          }
+        });
+      });
+      listenerApi.dispatch(setBarriers(barriers));
+    }
   },
 });
 

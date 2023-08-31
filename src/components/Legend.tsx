@@ -1,5 +1,6 @@
 import { FC } from "react";
 import { NODE_COLORS } from "../lib/NodeModel";
+import { useAppSelector } from "../state";
 
 const LEGEND_ITEM_STYLES: React.CSSProperties = {
   boxSizing: "border-box",
@@ -8,8 +9,10 @@ const LEGEND_ITEM_STYLES: React.CSSProperties = {
   justifyContent: "space-between",
 };
 
-export const Legend: FC<{ size: number; width: number }> = ({ size, width }) => {
-  const gridItemSize = Math.floor(width / size);
+export const Legend: FC = () => {
+  const itemsPerRow = useAppSelector((state) => state.grid.grid.nodes.length);
+  const widthOfGrid = useAppSelector((state) => state.grid.grid.size);
+  const gridItemSize = Math.floor(widthOfGrid / itemsPerRow);
 
   return (
     <div

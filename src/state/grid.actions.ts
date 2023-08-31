@@ -4,6 +4,8 @@ import { ChangeNodeParams, GridStatus, InitializeGridParams } from "./grid.commo
 
 export const searchGraph = createAction("graph/search");
 export const replaceNodes = createAction<NodeModel[][]>("graph/replaceNodes");
+export const resetNode = createAction<NodeModel>("graph/resetNode");
 export const initializeGraph = createAction<InitializeGridParams>("graph/init");
 export const changeNode = createAction<ChangeNodeParams>("grid/changeNode");
 export const setStatus = createAction<GridStatus>("grid/setStatus");
+export const setBarriers = createAction<NodeModel[]>("grid/setBarriers");

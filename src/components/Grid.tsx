@@ -1,28 +1,20 @@
-import { CSSProperties, FC, MouseEventHandler, useEffect, useState } from "react";
-import { HeuristicScore, NodeModel, NodeType, makeGrid, makeNodeKey, parseNodeKey } from "../lib/NodeModel";
-import { ValueOf } from "ts-essentials";
+import { CSSProperties, FC, MouseEventHandler, useEffect } from "react";
+import { NODE_COLOR_MAP, NodeModel, isSameCoordinates, makeNodeKey } from "../lib/NodeModel";
+import { changeNode, initializeGraph, resetNode, useAppDispatch, useAppSelector } from "../state";
 
-const STATUS = {
-  IDLE: "idle",
-  RUNNING: "running",
-  COMPLETE: "complete",
-};
-
-type GridStatus = ValueOf<typeof STATUS>;
-type OpenSetItem = { model: NodeModel; count: number; priority: number };
-
-const GridNode: FC<{ model: NodeModel; onClick: MouseEventHandler; onContextMenu: MouseEventHandler }> = ({
-  model,
-  onClick,
-  onContextMenu,
-}) => {
+const GridNode: FC<{
+  model: NodeModel;
+  onClick: MouseEventHandler;
+  onContextMenu: MouseEventHandler;
+  size: number;
+}> = ({ model, onClick, onContextMenu, size }) => {
   const style: CSSProperties = {
     position: "absolute",
     top: model.x,
     left: model.y,
-    height: model.width,
-    width: model.width,
-    backgroundColor: model.getColor(),
+    height: size,
+    width: size,
+    backgroundColor: NODE_COLOR_MAP[model.type],
     border: "1px solid gray",
     transition: "all",
   };
@@ -37,129 +29,36 @@ const GridNode: FC<{ model: NodeModel; onClick: MouseEventHandler; onContextMenu
   );
 };
 
-export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
-  const [status, setStatus] = useState<GridStatus>(STATUS.IDLE);
-  const [start, setStart] = useState<NodeModel | undefined>(undefined);
-  const [end, setEnd] = useState<NodeModel | undefined>(undefined);
-  const [barriers, setBarriers] = useState<NodeModel[]>([]);
-  const [nodes, setNodes] = useState(() => makeGrid(size, width));
+export const Grid = () => {
+  const dispatch = useAppDispatch();
+  const end = useAppSelector((state) => state.grid.grid.end);
+  const start = useAppSelector((state) => state.grid.grid.start);
+  const nodes = useAppSelector((state) => state.grid.grid.nodes);
+  const size = useAppSelector((state) => state.grid.grid.size);
+  const nodesPerRow = useAppSelector((state) => state.grid.grid.itemsPerRow);
+  const nodeSize = Math.floor(size / nodesPerRow);
 
-  useEffect(() => {
-    setNodes(makeGrid(size, width));
-  }, [size, width]);
-
-  useEffect(() => {
-    const handleSpacePress = () => {
-      setStatus(STATUS.RUNNING);
-    };
-    window.addEventListener("keydown", handleSpacePress);
-    return () => window.removeEventListener("keydown", handleSpacePress);
-  }, []);
-
-  useEffect(() => {
-    if (status == STATUS.RUNNING && start && end) {
-      let count = 0;
-      const openSet: OpenSetItem[] = [];
-      const openSetHash = new Set<NodeModel>();
-      const cameFrom = new Map<string, string>();
-
-      // setup Infinity as default values for all nodes
-      const gScores = new Map<string, number>();
-      const fScores = new Map<string, number>();
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = 0; j < nodes[i].length; j++) {
-          const key = makeNodeKey(nodes[i][j]);
-          gScores.set(key, Infinity);
-          fScores.set(key, Infinity);
-        }
-      }
-
-      const changeNodeType = (row: number, column: number, type: NodeType) => {
-        setNodes((curr) => {
-          // do not overwrite start and end node
-          if (curr[row][column].type === "Start") return curr;
-          if (curr[row][column].type === "End") return curr;
-          curr[row][column].setType(type);
-          return curr;
-        });
-      };
-
-      // standardize adding to the queue
-      const addNode = (node: NodeModel, count: number, priority: number) => {
-        if (node !== start && node !== end) {
-          changeNodeType(node.row, node.column, "Open");
-        }
-        openSetHash.add(node);
-        openSet.push({ model: node, count, priority });
-        openSet.sort((a, b) => {
-          if (a.priority === b.priority) {
-            return a.count - b.count;
-          }
-          return a.priority - b.priority;
-        });
-      };
-
-      // setup the open set
-      addNode(start, count, 0);
-      // set the g score for the start node
-      const startKey = makeNodeKey(start);
-      gScores.set(startKey, 0);
-
-      // estimate the distance from the start node to the end node
-      const [x1, y1] = start.getPosition();
-      const [x2, y2] = end.getPosition();
-      fScores.set(startKey, HeuristicScore(x1, y1, x2, y2));
-
-      while (openSet.length) {
-        const current = openSet.shift()?.model;
-        if (current) {
-          openSetHash.delete(current);
-
-          if (current == end) {
-            // todo: make path
-            let currKey = makeNodeKey(current);
-            while (cameFrom.has(currKey)) {
-              if (currKey) {
-                changeNodeType(current.row, current.column, "Path");
-                const nextKey = cameFrom.get(currKey);
-                if (nextKey) {
-                  const [x, y] = parseNodeKey(nextKey);
-                  changeNodeType(x, y, "Path");
-                  currKey = nextKey;
-                }
-              }
-            }
-            setStatus(STATUS.COMPLETE);
-            break;
-          }
-
-          current.updateNeighbors(nodes);
-
-          for (const n of current.neighbors) {
-            const neighborKey = makeNodeKey(n);
-            const currentKey = makeNodeKey(current);
-            const tentativeScore = gScores.get(currentKey)! + 1;
-            if (tentativeScore < gScores.get(neighborKey)!) {
-              cameFrom.set(neighborKey, currentKey);
-              gScores.set(neighborKey, tentativeScore);
-              const [x1, y1] = n.getPosition();
-              const [x2, y2] = end.getPosition();
-              fScores.set(neighborKey, tentativeScore + HeuristicScore(x1, y1, x2, y2));
-              if (!openSetHash.has(n)) {
-                count++;
-                addNode(n, count, fScores.get(neighborKey)!);
-              }
-            }
-          }
-
-          if (current !== start) {
-            changeNodeType(current.row, current.column, "Closed");
-          }
-        }
-      }
-      setStatus(STATUS.COMPLETE);
+  const handleNodeSelect = (node: NodeModel) => {
+    const isStart = start && isSameCoordinates(node, start);
+    const isEnd = end && isSameCoordinates(node, end);
+    if (!start) {
+      //node.setType('Start')
+      dispatch(changeNode({ row: node.row, column: node.column, changes: { type: "Start" } }));
+    } else if (!end && !isStart) {
+      //node.setType('End')
+      dispatch(changeNode({ row: node.row, column: node.column, changes: { type: "End" } }));
+    } else if (!isStart && !isEnd) {
+      //node.setType('End')
+      dispatch(changeNode({ row: node.row, column: node.column, changes: { type: "Barrier" } }));
     }
-  }, [status]);
+  };
+
+  const handleNodeDeSelect = (node: NodeModel) => {
+    // node.reset();
+    dispatch(resetNode(node));
+  };
+
+  console.log({ columnSize: nodes.length, size });
 
   return (
     <div
@@ -168,8 +67,8 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
         position: "relative",
         boxSizing: "border-box",
         display: "block",
-        width: width + size * 2,
-        height: width + size * 2,
+        width: size,
+        height: size,
         gridTemplateRows: "auto",
         gridTemplateColumns: "auto",
         transition: "all",
@@ -183,28 +82,11 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
             <GridNode
               key={id}
               model={n}
-              onClick={() => {
-                if (!start && n !== end) {
-                  n.setType("Start");
-                  setStart(n);
-                } else if (!end && n !== start) {
-                  n.setType("End");
-                  setEnd(n);
-                } else if (n !== start && n !== end) {
-                  n.setType("Barrier");
-                  setBarriers((curr) => [...curr, n]);
-                }
-              }}
+              size={nodeSize}
+              onClick={() => handleNodeSelect(n)}
               onContextMenu={(e) => {
                 e.preventDefault();
-                n.reset();
-                if (n === start) {
-                  setStart(undefined);
-                } else if (n === end) {
-                  setEnd(undefined);
-                } else if (barriers.includes(n)) {
-                  setBarriers((curr) => curr.filter((x) => x !== n));
-                }
+                handleNodeDeSelect(n);
               }}
             />
           );

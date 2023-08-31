@@ -24,7 +24,7 @@ export const NODE_TYPE = {
 
 export type NodeType = ValueOf<typeof NODE_TYPE>;
 
-const NODE_COLOR_MAP: { [k in NodeType]: NodeColor } = {
+export const NODE_COLOR_MAP: { [k in NodeType]: NodeColor } = {
   [NODE_TYPE.UNPARSED]: NODE_COLORS.WHITE,
   [NODE_TYPE.OPEN]: NODE_COLORS.GREEN,
   [NODE_TYPE.CLOSED]: NODE_COLORS.RED,
@@ -34,80 +34,57 @@ const NODE_COLOR_MAP: { [k in NodeType]: NodeColor } = {
   [NODE_TYPE.PATH]: NODE_COLORS.PURPLE,
 };
 
-export class NodeModel {
+export type NodeModel = {
   row: number;
   column: number;
-  width: number;
-
-  totalRows: number;
-  totalColumns: number;
-
+  size: number;
   x: number;
   y: number;
-
   type: NodeType;
+};
 
-  neighbors: NodeModel[] = [];
+export const initializeNodeModel = (row: number, column: number, size: number): NodeModel => ({
+  row,
+  column,
+  size,
+  x: row * size,
+  y: column * size,
+  type: NODE_TYPE.UNPARSED,
+});
 
-  constructor(row: number, column: number, width: number, gridSize: number) {
-    this.row = row;
-    this.column = column;
-    this.width = width;
-    this.totalRows = gridSize;
-    this.totalColumns = gridSize;
-    this.x = row * width;
-    this.y = column * width;
-    this.type = NODE_TYPE.UNPARSED;
+export const getNodeNeighbors = (node: NodeModel, grid: NodeModel[][]) => {
+  const neighbors = [];
+  const gridSize = grid.length;
+  if (node.row < gridSize - 1 && grid[node.row + 1][node.column].type !== "Barrier") {
+    neighbors.push(grid[node.row + 1][node.column]);
   }
-
-  setType(type: NodeType) {
-    this.type = type;
+  // up
+  if (node.row > 0 && grid[node.row - 1][node.column].type !== "Barrier") {
+    neighbors.push(grid[node.row - 1][node.column]);
   }
-
-  getPosition() {
-    return [this.row, this.column];
+  // right
+  if (node.column < gridSize - 1 && grid[node.row][node.column + 1].type !== "Barrier") {
+    neighbors.push(grid[node.row][node.column + 1]);
   }
-
-  getColor() {
-    return NODE_COLOR_MAP[this.type];
+  // left
+  if (node.column > 0 && grid[node.row][node.column - 1].type !== "Barrier") {
+    neighbors.push(grid[node.row][node.column - 1]);
   }
-
-  reset() {
-    this.type = NODE_TYPE.UNPARSED;
-  }
-
-  updateNeighbors(grid: NodeModel[][]) {
-    this.neighbors = [];
-    // down
-    if (this.row < this.totalRows - 1 && grid[this.row + 1][this.column].type !== "Barrier") {
-      this.neighbors.push(grid[this.row + 1][this.column]);
-    }
-    // up
-    if (this.row > 0 && grid[this.row - 1][this.column].type !== "Barrier") {
-      this.neighbors.push(grid[this.row - 1][this.column]);
-    }
-    // right
-    if (this.column < this.totalRows - 1 && grid[this.row][this.column + 1].type !== "Barrier") {
-      this.neighbors.push(grid[this.row][this.column + 1]);
-    }
-    // left
-    if (this.column > 0 && grid[this.row][this.column - 1].type !== "Barrier") {
-      this.neighbors.push(grid[this.row][this.column - 1]);
-    }
-  }
-}
+  return neighbors;
+};
 
 export const HeuristicScore = (x1: number, y1: number, x2: number, y2: number) => {
   return Math.abs(x1 - x2) + Math.abs(y1 - y2);
 };
 
-export const makeGrid = (size: number, width: number) => {
+export const makeGrid = (itemsPerRow: number, gridSize: number) => {
   const grid: NodeModel[][] = [];
-  const gap = Math.floor(width / size);
-  for (let i = 0; i < size; i++) {
+  console.log({ gridSize, itemsPerRow });
+  const gap = Math.floor(gridSize / itemsPerRow);
+  for (let i = 0; i < itemsPerRow; i++) {
     grid.push([]);
-    for (let j = 0; j < size; j++) {
-      const node = new NodeModel(i, j, gap, size);
+    for (let j = 0; j < itemsPerRow; j++) {
+      const node = initializeNodeModel(i, j, gap);
       grid[i].push(node);
     }
   }
@@ -123,3 +100,5 @@ export const isSameCoordinates = (a: NodeModel, b: NodeModel) => {
   const matchingCol = a.column == b.column;
   return matchingRow && matchingCol;
 };
+
+export const getNodePosition = (node: NodeModel) => [node.row, node.column];
