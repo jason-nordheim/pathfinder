@@ -1,13 +1,13 @@
-import { SliceCaseReducers, createReducer, createSlice } from "@reduxjs/toolkit";
+import { SliceCaseReducers, combineReducers, createReducer, createSlice } from "@reduxjs/toolkit";
 import { GridState } from "./grid.common";
 import { changeNode, initializeGraph, replaceNodes, resetNode, setStatus } from "./grid.actions";
-import { mergeRight } from "rambda";
+
 import { initializeNodeModel, makeGridGraph, parseNodeKey } from "../lib/NodeModel";
 
 export const DEFAULT_NODES_PER_ROW = 40;
 export const DEFAULT_GRID_WIDTH = 550;
 
-const DEFAULT_STATE: GridState = {
+export const DEFAULT_STATE: GridState = {
   nodes: makeGridGraph(DEFAULT_NODES_PER_ROW, DEFAULT_GRID_WIDTH),
   barriers: [],
   start: undefined,
@@ -19,7 +19,7 @@ const DEFAULT_STATE: GridState = {
 };
 
 export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => {
-  return builder
+  builder
     .addCase(initializeGraph, (state, action) => {
       console.log("initialize");
       state.status = "idle";
@@ -61,6 +61,8 @@ export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => 
       }
     });
 });
+
+console.log({ gridReducer });
 
 export const gridSlice = createSlice<GridState, SliceCaseReducers<GridState>, "grid">({
   initialState: DEFAULT_STATE,

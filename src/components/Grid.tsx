@@ -32,11 +32,11 @@ const GridNode: FC<{
 
 export const Grid = () => {
   const dispatch = useAppDispatch();
-  const end = useAppSelector((state) => state.grid.end);
-  const start = useAppSelector((state) => state.grid.start);
-  const nodes = useAppSelector((state) => state.grid.nodes);
-  const size = useAppSelector((state) => state.grid.size);
-  const nodesPerRow = useAppSelector((state) => state.grid.itemsPerRow);
+  const end = useAppSelector((state) => state.end);
+  const start = useAppSelector((state) => state.start);
+  const nodes = useAppSelector((state) => state.nodes);
+  const size = useAppSelector((state) => state.size);
+  const nodesPerRow = useAppSelector((state) => state.itemsPerRow);
   const nodeSize = Math.floor(size / nodesPerRow);
 
   const handleNodeSelect = (node: NodeModel) => {

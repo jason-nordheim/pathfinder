@@ -10,8 +10,8 @@ const LEGEND_ITEM_STYLES: React.CSSProperties = {
 };
 
 export const Legend: FC = () => {
-  const itemsPerRow = useAppSelector((state) => state.grid.itemsPerRow);
-  const widthOfGrid = useAppSelector((state) => state.grid.size);
+  const itemsPerRow = useAppSelector((state) => state.itemsPerRow);
+  const widthOfGrid = useAppSelector((state) => state.size);
   const gridItemSize = Math.floor(widthOfGrid / itemsPerRow);
 
   return (
