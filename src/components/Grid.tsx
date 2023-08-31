@@ -1,6 +1,6 @@
-import { CSSProperties, FC, MouseEventHandler, useEffect } from "react";
+import { CSSProperties, FC, MouseEventHandler } from "react";
 import { NODE_COLOR_MAP, NodeModel, isSameCoordinates, makeNodeKey } from "../lib/NodeModel";
-import { changeNode, initializeGraph, resetNode, useAppDispatch, useAppSelector } from "../state";
+import { changeNode, resetNode, useAppDispatch, useAppSelector } from "../state";
 
 const GridNode: FC<{
   model: NodeModel;
@@ -18,6 +18,7 @@ const GridNode: FC<{
     border: "1px solid gray",
     transition: "all",
   };
+
   return (
     <div
       className="node"
@@ -31,11 +32,11 @@ const GridNode: FC<{
 
 export const Grid = () => {
   const dispatch = useAppDispatch();
-  const end = useAppSelector((state) => state.grid.grid.end);
-  const start = useAppSelector((state) => state.grid.grid.start);
-  const nodes = useAppSelector((state) => state.grid.grid.nodes);
-  const size = useAppSelector((state) => state.grid.grid.size);
-  const nodesPerRow = useAppSelector((state) => state.grid.grid.itemsPerRow);
+  const end = useAppSelector((state) => state.grid.end);
+  const start = useAppSelector((state) => state.grid.start);
+  const nodes = useAppSelector((state) => state.grid.nodes);
+  const size = useAppSelector((state) => state.grid.size);
+  const nodesPerRow = useAppSelector((state) => state.grid.itemsPerRow);
   const nodeSize = Math.floor(size / nodesPerRow);
 
   const handleNodeSelect = (node: NodeModel) => {
@@ -43,6 +44,7 @@ export const Grid = () => {
     const isEnd = end && isSameCoordinates(node, end);
     if (!start) {
       //node.setType('Start')
+      console.log("setting start");
       dispatch(changeNode({ row: node.row, column: node.column, changes: { type: "Start" } }));
     } else if (!end && !isStart) {
       //node.setType('End')

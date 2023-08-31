@@ -3,7 +3,7 @@ import { Legend } from "./components/Legend";
 import { DEFAULT_GRID_WIDTH, useAppSelector } from "./state";
 
 function App() {
-  const size = useAppSelector((state) => state.grid.grid.size);
+  const size = useAppSelector((state) => state.grid.size);
   return (
     <div id="app" style={{ display: "flex", flexDirection: "column" }}>
       <div style={{ textAlign: "center", fontFamily: "sans-serif" }}>

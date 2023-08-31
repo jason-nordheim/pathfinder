@@ -8,47 +8,47 @@ export const DEFAULT_NODES_PER_ROW = 40;
 export const DEFAULT_GRID_WIDTH = 550;
 
 const DEFAULT_STATE: GridState = {
-  grid: {
-    nodes: makeGrid(DEFAULT_NODES_PER_ROW, DEFAULT_GRID_WIDTH),
-    barriers: [],
-    start: undefined,
-    end: undefined,
-    status: "idle",
-    delay: 0,
-    size: DEFAULT_GRID_WIDTH,
-    itemsPerRow: DEFAULT_NODES_PER_ROW,
-  },
+  nodes: makeGrid(DEFAULT_NODES_PER_ROW, DEFAULT_GRID_WIDTH),
+  barriers: [],
+  start: undefined,
+  end: undefined,
+  status: "idle",
+  delay: 0,
+  size: DEFAULT_GRID_WIDTH,
+  itemsPerRow: DEFAULT_NODES_PER_ROW,
 };
 
 export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => {
   builder.addCase(initializeGraph, (state, action) => {
-    state.grid.status = "idle";
-    state.grid.barriers = [];
-    state.grid.start = undefined;
-    state.grid.end = undefined;
-    state.grid.size = action.payload.gridWidth;
-    state.grid.itemsPerRow = action.payload.numPerRow;
+    state.status = "idle";
+    state.barriers = [];
+    state.start = undefined;
+    state.end = undefined;
+    state.size = action.payload.gridWidth;
+    state.itemsPerRow = action.payload.numPerRow;
   });
   builder.addCase(changeNode, (state, action) => {
+    console.log("changeNode");
     const { row, column, changes } = action.payload;
-    state.grid.nodes[row][column] = mergeRight(state.grid.nodes[row][column], changes);
+    console.log({ changes });
+    state.nodes[row][column] = mergeRight(state.nodes[row][column], changes);
   });
   builder.addCase(replaceNodes, (state, action) => {
-    state.grid.nodes = action.payload;
+    state.nodes = action.payload;
   });
   builder.addCase(setStatus, (state, action) => {
-    state.grid.status = action.payload;
+    state.status = action.payload;
   });
   builder.addCase(resetNode, (state, action) => {
     const { row, column } = action.payload;
-    const { size, itemsPerRow } = state.grid;
+    const { size, itemsPerRow } = state;
     const nodeSize = Math.floor(size / itemsPerRow);
-    state.grid.nodes[row][column] = initializeNodeModel(row, column, nodeSize);
+    state.nodes[row][column] = initializeNodeModel(row, column, nodeSize);
   });
 });
 
 export const gridSlice = createSlice<GridState, SliceCaseReducers<GridState>, "grid">({
   initialState: DEFAULT_STATE,
-  reducers: { grid: gridReducer },
+  reducers: { ...gridReducer },
   name: "grid",
 });

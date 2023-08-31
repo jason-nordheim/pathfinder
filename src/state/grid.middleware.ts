@@ -17,7 +17,7 @@ const gridMiddleware = createListenerMiddleware<{ grid: GridState }>();
 gridMiddleware.startListening({
   actionCreator: searchGraph,
   effect: async (_, listenerApi) => {
-    const { nodes, delay, end, start } = listenerApi.getState().grid.grid;
+    const { nodes, delay, end, start } = listenerApi.getState().grid;
     // guard
     if (!end || !start) {
       console.warn("Missing either start or end node");
