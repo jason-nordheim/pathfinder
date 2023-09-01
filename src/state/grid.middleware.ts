@@ -40,6 +40,7 @@ gridMiddleware.startListening({
       gScores.set(node.key, Infinity);
       fScores.set(node.key, Infinity);
     }
+    console.log("nodes set to infinity");
 
     // standardize adding to the queue
     const addNode = (node: NodeModel, count: number, priority: number) => {
@@ -85,7 +86,6 @@ gridMiddleware.startListening({
             currentKey = nextKey;
           }
           setStatus("finished");
-          return;
         }
 
         // have not reached the target node yet
@@ -103,7 +103,7 @@ gridMiddleware.startListening({
             fScores.set(n.key, tentativeScore + HeuristicScore(x1, y1, x2, y2));
             if (openSet.has(n)) {
               count++;
-              addNode;
+              addNode(n, count, fScores.get(n.key)!);
             }
           }
         }

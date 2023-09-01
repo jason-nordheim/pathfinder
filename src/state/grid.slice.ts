@@ -30,6 +30,7 @@ export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => 
       state.itemsPerRow = action.payload.numPerRow;
     })
     .addCase(changeNode, (state, action) => {
+      if (state.status === "working") return;
       const { key, changes } = action.payload;
       // merge the changes with the initial properties
       const initialNode = state.nodes[key];

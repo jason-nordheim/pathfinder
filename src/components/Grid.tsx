@@ -37,24 +37,24 @@ export const Grid = () => {
   const nodes = useAppSelector((state) => state.nodes);
   const size = useAppSelector((state) => state.size);
   const nodesPerRow = useAppSelector((state) => state.itemsPerRow);
+  const status = useAppSelector((state) => state.status);
   const nodeSize = Math.floor(size / nodesPerRow);
 
   useEffect(() => {
     const findShortestPath = (e: KeyboardEvent) => {
-      if (e.key === " ") {
+      if (e.key === " " && status !== "working") {
         dispatch(searchGraph());
       }
     };
     window.addEventListener("keypress", findShortestPath);
     return () => window.removeEventListener("keypress", findShortestPath);
-  }, [dispatch]);
+  }, [dispatch, status]);
 
   const handleNodeSelect = (node: NodeModel) => {
-    if (node.key) {
+    if (node.key && status !== "working") {
       const isStart = start && isSameCoordinates(node, start);
       const isEnd = end && isSameCoordinates(node, end);
       if (start === undefined) {
-        console.log("setting start", node);
         dispatch(changeNode({ key: node.key, changes: { type: "Start" } }));
       } else if (end == undefined && !isStart && !isEnd) {
         dispatch(changeNode({ key: node.key, changes: { type: "End" } }));
@@ -65,7 +65,7 @@ export const Grid = () => {
   };
 
   const handleNodeDeSelect = (node: NodeModel) => {
-    if (node.key) {
+    if (node.key && status !== "working") {
       dispatch(resetNode(node.key));
     }
   };
@@ -83,6 +83,7 @@ export const Grid = () => {
         gridTemplateColumns: "auto",
         transition: "all",
         gap: "0px",
+        cursor: status === "working" ? "not-allowed" : "auto",
       }}
     >
       {Object.values(nodes).map((node) => {
