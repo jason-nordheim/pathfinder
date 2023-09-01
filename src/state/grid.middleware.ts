@@ -5,6 +5,7 @@ import {
   HeuristicScore,
   KeyedNodePosition,
   NodeModel,
+  NodeType,
   getNodeNeighbors,
   getNodePosition,
   isSameCoordinates,
@@ -20,7 +21,7 @@ gridMiddleware.startListening({
   effect: async (_, listenerApi) => {
     const { nodes, delay, end, start, size } = listenerApi.getState();
     // guard
-    if (!end || !start) {
+    if (end === undefined || start === undefined) {
       console.warn("Missing either start or end node");
       return;
     }
@@ -40,14 +41,18 @@ gridMiddleware.startListening({
       gScores.set(node.key, Infinity);
       fScores.set(node.key, Infinity);
     }
-    console.log("nodes set to infinity");
+
+    const changeNodeType = async (key: string, newType: NodeType) => {
+      delay && (await listenerApi.delay(delay));
+      listenerApi.dispatch(changeNode({ key, changes: { type: newType } }));
+    };
 
     // standardize adding to the queue
-    const addNode = (node: NodeModel, count: number, priority: number) => {
-      const notStartPos = !isSameCoordinates(start!, node);
-      const notEndPos = !isSameCoordinates(end!, node);
-      if (notStartPos && notEndPos) {
-        listenerApi.dispatch(changeNode({ key: node.key, changes: { type: "Open" } }));
+    const addNode = async (node: NodeModel, count: number, priority: number) => {
+      const isStartPosition = isSameCoordinates(start!, node);
+      const isEndPosition = isSameCoordinates(end!, node);
+      if (!isStartPosition && !isEndPosition) {
+        await changeNodeType(node.key, "Open");
       }
       openSet.add(node);
       openNodes.push({ model: node, count, priority });
@@ -74,18 +79,19 @@ gridMiddleware.startListening({
         openSet.delete(current);
 
         // we've found the target node
-        if (isSameCoordinates(current, end)) {
+        const isEndNode = isSameCoordinates(current, end);
+        if (isEndNode || current.type === "End") {
           let currentKey: string | undefined = current.key;
           while (currentKey && cameFrom.has(currentKey)) {
-            listenerApi.delay(delay);
-            const isStartOrEnd = isSameCoordinates(start, current) || isSameCoordinates(end, current);
-            if (!isStartOrEnd) {
-              listenerApi.dispatch(changeNode({ key: current.key, changes: { type: "Path" } }));
+            if (nodes[currentKey].type !== "End") {
+              // console.log("setting path", current);
+              // listenerApi.dispatch(changeNode({ key: currentKey, changes: { type: "Path" } }));
+              changeNodeType(currentKey, "Path");
             }
-            const nextKey = cameFrom.get(currentKey);
-            currentKey = nextKey;
+            currentKey = cameFrom.get(currentKey);
           }
           setStatus("finished");
+          return;
         }
 
         // have not reached the target node yet
@@ -94,22 +100,25 @@ gridMiddleware.startListening({
         // inspect neighbors
         const neighbors = getNodeNeighbors(current, nodes, size);
         for (const n of neighbors) {
-          const tentativeScore = gScores.get(currentKey)! + 1;
-          if (tentativeScore && n?.key && tentativeScore < gScores.get(n?.key)!) {
+          const gScoreCurrentNode = gScores.get(currentKey);
+          const tentativeScore = gScoreCurrentNode! + 1;
+          if (tentativeScore && n?.key && tentativeScore < gScores.get(n.key)!) {
             cameFrom.set(n.key, currentKey);
             gScores.set(n.key, tentativeScore);
             const [x1, y1] = getNodePosition(n);
             const [x2, y2] = getNodePosition(end);
-            fScores.set(n.key, tentativeScore + HeuristicScore(x1, y1, x2, y2));
-            if (openSet.has(n)) {
+            const fScore = tentativeScore + HeuristicScore(x1, y1, x2, y2);
+            console.log(fScore);
+            fScores.set(n.key, fScore);
+            if (!openSet.has(n)) {
               count++;
-              addNode(n, count, fScores.get(n.key)!);
+              await addNode(n, count, fScores.get(n.key)!);
             }
           }
         }
 
         if (!isSameCoordinates(current, start)) {
-          listenerApi.dispatch(changeNode({ key: current.key, changes: { type: "Closed" } }));
+          await changeNodeType(current.key, "Closed");
         }
       }
     }
