@@ -1,9 +1,10 @@
-import { CSSProperties, FC, MouseEventHandler, useEffect, useState } from "react";
-import { HeuristicScore, NodeModel, NodeType, makeGrid, makeNodeKey, parseNodeKey } from "../lib/NodeModel";
+import { CSSProperties, FC, MouseEventHandler, useCallback, useEffect, useState } from "react";
+import { HeuristicScore, NODE_TYPE, NodeModel, NodeType, makeGrid, makeNodeKey, parseNodeKey } from "../lib/NodeModel";
 import { ValueOf } from "ts-essentials";
 
 const STATUS = {
   IDLE: "idle",
+  STARTED: "started",
   RUNNING: "running",
   COMPLETE: "complete",
 };
@@ -35,21 +36,41 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
   const [barriers, setBarriers] = useState<NodeModel[]>([]);
   const [nodes, setNodes] = useState(() => makeGrid(size, width));
 
+  const makeRandomBarriers = useCallback((amount: number) => {
+    for (let i = 0; i < amount; i++) {
+      const col = Math.floor(Math.random() * nodes.length);
+      const row = Math.floor(Math.random() * nodes.length);
+      if (nodes[row][col] && nodes[row][col].type === "Unparsed") {
+        setNodes((currNodes) => {
+          currNodes[row][col].type = "Barrier";
+          return currNodes;
+        });
+      }
+    }
+  }, []);
+
   useEffect(() => {
     setNodes(makeGrid(size, width));
-  }, [size, width]);
+    makeRandomBarriers(60);
+  }, [size, width, makeRandomBarriers]);
 
   useEffect(() => {
     const handleSpacePress = () => {
-      setStatus(STATUS.RUNNING);
+      setStatus(STATUS.STARTED);
+      window.removeEventListener("keydown", handleSpacePress);
     };
-    window.addEventListener("keydown", handleSpacePress);
+
+    if (status === STATUS.IDLE || status === STATUS.COMPLETE) {
+      window.addEventListener("keydown", handleSpacePress);
+    }
 
     return () => window.removeEventListener("keydown", handleSpacePress);
   }, []);
 
   useEffect(() => {
-    if (status == STATUS.RUNNING && start && end) {
+    if (status == STATUS.STARTED && start && end && status) {
+      if (status === STATUS.RUNNING) return;
+      setStatus(STATUS.RUNNING);
       let count = 0;
       const openSet: OpenSetItem[] = [];
       const openSetHash = new Set<NodeModel>();
@@ -122,7 +143,7 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
               }
             }
             setStatus(STATUS.COMPLETE);
-            break;
+            return;
           }
 
           current.updateNeighbors(nodes);
