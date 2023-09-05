@@ -25,6 +25,7 @@ const GridNode: FC<{ model: NodeModel; onClick: MouseEventHandler; onContextMenu
     width: model.width,
     backgroundColor: model.getColor(),
     border: "1px solid gray",
+    transition: "0.5s ease",
   };
   return <div className="node" style={style} onClick={onClick} onContextMenu={onContextMenu}></div>;
 };
