@@ -21,7 +21,6 @@ export const DEFAULT_STATE: GridState = {
 export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => {
   builder
     .addCase(initializeGraph, (state, action) => {
-      console.log("initialize");
       state.status = "idle";
       state.barriers = [];
       state.start = undefined;
@@ -62,8 +61,6 @@ export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => 
       }
     });
 });
-
-console.log({ gridReducer });
 
 export const gridSlice = createSlice<GridState, SliceCaseReducers<GridState>, "grid">({
   initialState: DEFAULT_STATE,

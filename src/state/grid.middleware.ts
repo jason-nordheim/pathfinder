@@ -84,8 +84,6 @@ gridMiddleware.startListening({
           let currentKey: string | undefined = current.key;
           while (currentKey && cameFrom.has(currentKey)) {
             if (nodes[currentKey].type !== "End") {
-              // console.log("setting path", current);
-              // listenerApi.dispatch(changeNode({ key: currentKey, changes: { type: "Path" } }));
               changeNodeType(currentKey, "Path");
             }
             currentKey = cameFrom.get(currentKey);
