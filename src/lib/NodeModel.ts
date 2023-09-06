@@ -1,17 +1,17 @@
 import { ValueOf } from "ts-essentials";
 import { GridGraph } from "../state";
 
-export const NODE_COLORS = {
-  WHITE: "#FFF",
-  RED: "#FF0000",
-  ORANGE: "#FFA500",
-  GREEN: "#008000",
-  PURPLE: "#DA70D6",
-  TURQUOISE: "#40E0D0",
-  BLACK: "#000",
-} as const;
+// export const NODE_COLORS = {
+//   WHITE: "#FFF",
+//   RED: "#FF0000",
+//   ORANGE: "#FFA500",
+//   GREEN: "#008000",
+//   PURPLE: "#DA70D6",
+//   TURQUOISE: "#40E0D0",
+//   BLACK: "#000",
+// } as const;
 
-type NodeColor = ValueOf<typeof NODE_COLORS>;
+// type NodeColor = ValueOf<typeof NODE_COLORS>;
 
 export const NODE_TYPE = {
   UNPARSED: "Unparsed",
@@ -25,15 +25,15 @@ export const NODE_TYPE = {
 
 export type NodeType = ValueOf<typeof NODE_TYPE>;
 
-export const NODE_COLOR_MAP: { [k in NodeType]: NodeColor } = {
-  [NODE_TYPE.UNPARSED]: NODE_COLORS.WHITE,
-  [NODE_TYPE.OPEN]: NODE_COLORS.GREEN,
-  [NODE_TYPE.CLOSED]: NODE_COLORS.RED,
-  [NODE_TYPE.BARRIER]: NODE_COLORS.BLACK,
-  [NODE_TYPE.START]: NODE_COLORS.ORANGE,
-  [NODE_TYPE.END]: NODE_COLORS.TURQUOISE,
-  [NODE_TYPE.PATH]: NODE_COLORS.PURPLE,
-};
+// export const NODE_COLOR_MAP: { [k in NodeType]: NodeColor } = {
+//   [NODE_TYPE.UNPARSED]: NODE_COLORS.WHITE,
+//   [NODE_TYPE.OPEN]: NODE_COLORS.GREEN,
+//   [NODE_TYPE.CLOSED]: NODE_COLORS.RED,
+//   [NODE_TYPE.BARRIER]: NODE_COLORS.BLACK,
+//   [NODE_TYPE.START]: NODE_COLORS.ORANGE,
+//   [NODE_TYPE.END]: NODE_COLORS.TURQUOISE,
+//   [NODE_TYPE.PATH]: NODE_COLORS.PURPLE,
+// };
 
 export type NodePosition = { row: number; column: number };
 export type NodeModel = NodePosition & {

@@ -1,6 +1,8 @@
-import { CSSProperties, FC, MouseEventHandler, useEffect } from "react";
-import { NODE_COLOR_MAP, NodeModel, isSameCoordinates } from "../lib/NodeModel";
+import { FC, MouseEventHandler, useEffect, useMemo } from "react";
+import { NodeModel, isSameCoordinates } from "../lib/NodeModel";
 import { changeNode, resetNode, searchGraph, useAppDispatch, useAppSelector } from "../state";
+import cx from "classnames";
+import { useDynamicNodeSize } from "../hooks";
 
 const GridNode: FC<{
   model: NodeModel;
@@ -8,22 +10,16 @@ const GridNode: FC<{
   onContextMenu: MouseEventHandler;
   size: number;
 }> = ({ model, onClick, onContextMenu, size }) => {
-  const style: CSSProperties = {
-    position: "absolute",
-    top: model.x,
-    left: model.y,
-    height: size,
-    width: size,
-    backgroundColor: NODE_COLOR_MAP[model.type],
-    border: "1px solid gray",
-    transition: "0.5s ease",
-  };
-
   return (
     <div
-      className="node"
+      className={cx("node", model.type.toLowerCase())}
       aria-label={`node-${model.x}-${model.y}`}
-      style={style}
+      style={{
+        top: model.x,
+        left: model.y,
+        height: size,
+        width: size,
+      }}
       onClick={onClick}
       onContextMenu={onContextMenu}
     ></div>
@@ -38,7 +34,8 @@ export const Grid = () => {
   const size = useAppSelector((state) => state.size);
   const nodesPerRow = useAppSelector((state) => state.itemsPerRow);
   const status = useAppSelector((state) => state.status);
-  const nodeSize = Math.floor(size / nodesPerRow);
+  const nodeSize = useDynamicNodeSize(size, nodesPerRow);
+  const gridSize = useMemo(() => size - nodesPerRow * 0.7, [size, nodesPerRow]);
 
   useEffect(() => {
     const findShortestPath = (e: KeyboardEvent) => {
@@ -74,15 +71,8 @@ export const Grid = () => {
     <div
       id="grid"
       style={{
-        position: "relative",
-        boxSizing: "border-box",
-        display: "block",
-        width: size,
-        height: size,
-        gridTemplateRows: "auto",
-        gridTemplateColumns: "auto",
-        transition: "all",
-        gap: "0px",
+        width: gridSize,
+        height: gridSize,
         cursor: status === "working" ? "not-allowed" : "auto",
       }}
     >
