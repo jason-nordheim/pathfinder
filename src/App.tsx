@@ -4,7 +4,7 @@ import { Legend } from "./components/Legend";
 import { DEFAULT_GRID_WIDTH, useAppSelector } from "./state";
 
 function App() {
-  const size = useAppSelector((state) => state.size);
+  const nodes = useAppSelector((state) => state.nodes);
   return (
     <div id="app" style={{ display: "flex", flexDirection: "column" }}>
       <div style={{ textAlign: "center", fontFamily: "sans-serif" }}>
@@ -32,7 +32,7 @@ function App() {
               type="number"
               name="grid-size"
               id="grid-size"
-              value={size}
+              value={Math.sqrt(Object.keys(nodes).length)}
               style={{ fontFamily: "sans-serif" }}
             />
           </div>
