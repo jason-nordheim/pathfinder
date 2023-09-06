@@ -1,181 +1,74 @@
-import { CSSProperties, FC, MouseEventHandler, useCallback, useEffect, useState } from "react";
-import { HeuristicScore, NodeModel, NodeType, makeGrid, makeNodeKey, parseNodeKey } from "../lib/NodeModel";
-import { ValueOf } from "ts-essentials";
+import { CSSProperties, FC, MouseEventHandler, useEffect } from "react";
+import { NODE_COLOR_MAP, NodeModel, isSameCoordinates } from "../lib/NodeModel";
+import { changeNode, resetNode, searchGraph, useAppDispatch, useAppSelector } from "../state";
 
-const STATUS = {
-  IDLE: "idle",
-  STARTED: "started",
-  RUNNING: "running",
-  COMPLETE: "complete",
-};
-
-type GridStatus = ValueOf<typeof STATUS>;
-type OpenSetItem = { model: NodeModel; count: number; priority: number };
-
-const GridNode: FC<{ model: NodeModel; onClick: MouseEventHandler; onContextMenu: MouseEventHandler }> = ({
-  model,
-  onClick,
-  onContextMenu,
-}) => {
+const GridNode: FC<{
+  model: NodeModel;
+  onClick: MouseEventHandler;
+  onContextMenu: MouseEventHandler;
+  size: number;
+}> = ({ model, onClick, onContextMenu, size }) => {
   const style: CSSProperties = {
     position: "absolute",
     top: model.x,
     left: model.y,
-    height: model.width,
-    width: model.width,
-    backgroundColor: model.getColor(),
+    height: size,
+    width: size,
+    backgroundColor: NODE_COLOR_MAP[model.type],
     border: "1px solid gray",
     transition: "0.5s ease",
   };
-  return <div className="node" style={style} onClick={onClick} onContextMenu={onContextMenu}></div>;
+
+  return (
+    <div
+      className="node"
+      aria-label={`node-${model.x}-${model.y}`}
+      style={style}
+      onClick={onClick}
+      onContextMenu={onContextMenu}
+    ></div>
+  );
 };
 
-export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
-  const [status, setStatus] = useState<GridStatus>(STATUS.IDLE);
-  const [start, setStart] = useState<NodeModel | undefined>(undefined);
-  const [end, setEnd] = useState<NodeModel | undefined>(undefined);
-  const [barriers, setBarriers] = useState<NodeModel[]>([]);
-  const [nodes, setNodes] = useState(() => makeGrid(size, width));
+export const Grid = () => {
+  const dispatch = useAppDispatch();
+  const end = useAppSelector((state) => state.end);
+  const start = useAppSelector((state) => state.start);
+  const nodes = useAppSelector((state) => state.nodes);
+  const size = useAppSelector((state) => state.size);
+  const nodesPerRow = useAppSelector((state) => state.itemsPerRow);
+  const status = useAppSelector((state) => state.status);
+  const nodeSize = Math.floor(size / nodesPerRow);
 
-  const makeRandomBarriers = useCallback((amount: number) => {
-    for (let i = 0; i < amount; i++) {
-      const col = Math.floor(Math.random() * nodes.length);
-      const row = Math.floor(Math.random() * nodes.length);
-      if (nodes[row][col] && nodes[row][col].type === "Unparsed") {
-        setNodes((currNodes) => {
-          currNodes[row][col].type = "Barrier";
-          return currNodes;
-        });
+  useEffect(() => {
+    const findShortestPath = (e: KeyboardEvent) => {
+      if (e.key === " " && status !== "working") {
+        dispatch(searchGraph());
       }
-    }
-  }, []);
-
-  useEffect(() => {
-    setNodes(makeGrid(size, width));
-    makeRandomBarriers(120);
-  }, [size, width, makeRandomBarriers]);
-
-  useEffect(() => {
-    const handleSpacePress = () => {
-      setStatus(STATUS.STARTED);
-      window.removeEventListener("keydown", handleSpacePress);
     };
+    window.addEventListener("keypress", findShortestPath);
+    return () => window.removeEventListener("keypress", findShortestPath);
+  }, [dispatch, status]);
 
-    if (status === STATUS.IDLE || status === STATUS.COMPLETE) {
-      window.addEventListener("keydown", handleSpacePress);
-    }
-
-    return () => window.removeEventListener("keydown", handleSpacePress);
-  }, []);
-
-  useEffect(() => {
-    if (status == STATUS.STARTED && start && end && status) {
-      if (status === STATUS.RUNNING) return;
-      setStatus(STATUS.RUNNING);
-      let count = 0;
-      const openSet: OpenSetItem[] = [];
-      const openSetHash = new Set<NodeModel>();
-      const cameFrom = new Map<string, string>();
-
-      // setup Infinity as default values for all nodes
-      const gScores = new Map<string, number>();
-      const fScores = new Map<string, number>();
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = 0; j < nodes[i].length; j++) {
-          const key = makeNodeKey(nodes[i][j]);
-          gScores.set(key, Infinity);
-          fScores.set(key, Infinity);
-        }
+  const handleNodeSelect = (node: NodeModel) => {
+    if (node.key && status !== "working") {
+      const isStart = start && isSameCoordinates(node, start);
+      const isEnd = end && isSameCoordinates(node, end);
+      if (start === undefined) {
+        dispatch(changeNode({ key: node.key, changes: { type: "Start" } }));
+      } else if (end == undefined && !isStart && !isEnd) {
+        dispatch(changeNode({ key: node.key, changes: { type: "End" } }));
+      } else if (!isStart && !isEnd) {
+        dispatch(changeNode({ key: node.key, changes: { type: "Barrier" } }));
       }
-
-      const changeNodeType = (row: number, column: number, type: NodeType) => {
-        window.requestAnimationFrame(() => {
-          return setNodes((curr) => {
-            // do not overwrite start and end node
-            if (curr[row][column].type === "Start") return curr;
-            if (curr[row][column].type === "End") return curr;
-            curr[row][column].setType(type);
-            return curr;
-          });
-        });
-      };
-
-      // standardize adding to the queue
-      const addNode = (node: NodeModel, count: number, priority: number) => {
-        if (node !== start && node !== end) {
-          changeNodeType(node.row, node.column, "Open");
-        }
-        openSetHash.add(node);
-        openSet.push({ model: node, count, priority });
-        openSet.sort((a, b) => {
-          if (a.priority === b.priority) {
-            return a.count - b.count;
-          }
-          return a.priority - b.priority;
-        });
-      };
-
-      // setup the open set
-      addNode(start, count, 0);
-      // set the g score for the start node
-      const startKey = makeNodeKey(start);
-      gScores.set(startKey, 0);
-
-      // estimate the distance from the start node to the end node
-      const [x1, y1] = start.getPosition();
-      const [x2, y2] = end.getPosition();
-      fScores.set(startKey, HeuristicScore(x1, y1, x2, y2));
-
-      while (openSet.length) {
-        const current = openSet.shift()?.model;
-        if (current) {
-          openSetHash.delete(current);
-
-          if (current == end) {
-            // todo: make path
-            let currKey = makeNodeKey(current);
-            while (cameFrom.has(currKey)) {
-              if (currKey) {
-                changeNodeType(current.row, current.column, "Path");
-                const nextKey = cameFrom.get(currKey);
-                if (nextKey) {
-                  const [x, y] = parseNodeKey(nextKey);
-                  changeNodeType(x, y, "Path");
-                  currKey = nextKey;
-                }
-              }
-            }
-            setStatus(STATUS.COMPLETE);
-            return;
-          }
-
-          current.updateNeighbors(nodes);
-
-          for (const n of current.neighbors) {
-            const neighborKey = makeNodeKey(n);
-            const currentKey = makeNodeKey(current);
-            const tentativeScore = gScores.get(currentKey)! + 1;
-            if (tentativeScore < gScores.get(neighborKey)!) {
-              cameFrom.set(neighborKey, currentKey);
-              gScores.set(neighborKey, tentativeScore);
-              const [x1, y1] = n.getPosition();
-              const [x2, y2] = end.getPosition();
-              fScores.set(neighborKey, tentativeScore + HeuristicScore(x1, y1, x2, y2));
-              if (!openSetHash.has(n)) {
-                count++;
-                addNode(n, count, fScores.get(neighborKey)!);
-              }
-            }
-          }
-
-          if (current !== start) {
-            changeNodeType(current.row, current.column, "Closed");
-          }
-        }
-      }
-      setStatus(STATUS.COMPLETE);
     }
-  }, [status]);
+  };
+
+  const handleNodeDeSelect = (node: NodeModel) => {
+    if (node.key && status !== "working") {
+      dispatch(resetNode(node.key));
+    }
+  };
 
   return (
     <div
@@ -184,47 +77,29 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
         position: "relative",
         boxSizing: "border-box",
         display: "block",
-        width: width + size * 2,
-        height: width + size * 2,
+        width: size,
+        height: size,
         gridTemplateRows: "auto",
         gridTemplateColumns: "auto",
+        transition: "all",
         gap: "0px",
+        cursor: status === "working" ? "not-allowed" : "auto",
       }}
     >
-      {nodes.map((row) =>
-        row.map((n) => {
-          const id = makeNodeKey(n);
-          return (
-            <GridNode
-              key={id}
-              model={n}
-              onClick={() => {
-                if (!start && n !== end) {
-                  n.setType("Start");
-                  setStart(n);
-                } else if (!end && n !== start) {
-                  n.setType("End");
-                  setEnd(n);
-                } else if (n !== start && n !== end) {
-                  n.setType("Barrier");
-                  setBarriers((curr) => [...curr, n]);
-                }
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                n.reset();
-                if (n === start) {
-                  setStart(undefined);
-                } else if (n === end) {
-                  setEnd(undefined);
-                } else if (barriers.includes(n)) {
-                  setBarriers((curr) => curr.filter((x) => x !== n));
-                }
-              }}
-            />
-          );
-        })
-      )}
+      {Object.values(nodes).map((node) => {
+        return (
+          <GridNode
+            key={node.key}
+            model={node}
+            size={nodeSize}
+            onClick={() => handleNodeSelect(node)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              handleNodeDeSelect(node);
+            }}
+          />
+        );
+      })}
     </div>
   );
 };

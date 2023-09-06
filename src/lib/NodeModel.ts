@@ -1,4 +1,5 @@
 import { ValueOf } from "ts-essentials";
+import { GridGraph } from "../state";
 
 export const NODE_COLORS = {
   WHITE: "#FFF",
@@ -24,7 +25,7 @@ export const NODE_TYPE = {
 
 export type NodeType = ValueOf<typeof NODE_TYPE>;
 
-const NODE_COLOR_MAP: { [k in NodeType]: NodeColor } = {
+export const NODE_COLOR_MAP: { [k in NodeType]: NodeColor } = {
   [NODE_TYPE.UNPARSED]: NODE_COLORS.WHITE,
   [NODE_TYPE.OPEN]: NODE_COLORS.GREEN,
   [NODE_TYPE.CLOSED]: NODE_COLORS.RED,
@@ -34,86 +35,90 @@ const NODE_COLOR_MAP: { [k in NodeType]: NodeColor } = {
   [NODE_TYPE.PATH]: NODE_COLORS.PURPLE,
 };
 
-export class NodeModel {
-  row: number;
-  column: number;
-  width: number;
-
-  totalRows: number;
-  totalColumns: number;
-
+export type NodePosition = { row: number; column: number };
+export type NodeModel = NodePosition & {
+  key: string;
+  size: number;
   x: number;
   y: number;
-
   type: NodeType;
+};
+export type KeyedNodePosition = NodePosition & { key: string };
 
-  neighbors: NodeModel[] = [];
+export const initializeNodeModel = (row: number, column: number, size: number): NodeModel => ({
+  key: makeNodeKey({ row, column }),
+  row,
+  column,
+  size,
+  x: row * size,
+  y: column * size,
+  type: NODE_TYPE.UNPARSED,
+});
 
-  constructor(row: number, column: number, width: number, gridSize: number) {
-    this.row = row;
-    this.column = column;
-    this.width = width;
-    this.totalRows = gridSize;
-    this.totalColumns = gridSize;
-    this.x = row * width;
-    this.y = column * width;
-    this.type = NODE_TYPE.UNPARSED;
+export const getNodeNeighbors = (node: NodeModel, grid: GridGraph, gridSize: number) => {
+  const neighbors = [];
+  const [row, column] = parseNodeKey(node.key);
+  const coordinates = {
+    above: { row: row + 1, column },
+    below: { row: row - 1, column },
+    right: { row, column: column + 1 },
+    left: { row, column: column - 1 },
+  };
+  const keys = {
+    above: makeNodeKey(coordinates.above),
+    below: makeNodeKey(coordinates.below),
+    right: makeNodeKey(coordinates.right),
+    left: makeNodeKey(coordinates.left),
+  };
+  const nodes = {
+    above: grid[keys.above],
+    below: grid[keys.below],
+    right: grid[keys.right],
+    left: grid[keys.left],
+  };
+  // down
+  if (node.row < gridSize - 1 && nodes.below?.type !== "Barrier") {
+    neighbors.push(nodes.below);
   }
-
-  setType(type: NodeType) {
-    this.type = type;
+  // up
+  if (node.row > 0 && nodes.above?.type !== "Barrier") {
+    neighbors.push(nodes.above);
   }
-
-  getPosition() {
-    return [this.row, this.column];
+  // right
+  if (node.column < gridSize - 1 && nodes.right?.type !== "Barrier") {
+    neighbors.push(nodes.right);
   }
-
-  getColor() {
-    return NODE_COLOR_MAP[this.type];
+  // left
+  if (node.column > 0 && nodes.left?.type !== "Barrier") {
+    neighbors.push(nodes.left);
   }
-
-  reset() {
-    this.type = NODE_TYPE.UNPARSED;
-  }
-
-  updateNeighbors(grid: NodeModel[][]) {
-    this.neighbors = [];
-    // down
-    if (this.row < this.totalRows - 1 && grid[this.row + 1][this.column].type !== "Barrier") {
-      this.neighbors.push(grid[this.row + 1][this.column]);
-    }
-    // up
-    if (this.row > 0 && grid[this.row - 1][this.column].type !== "Barrier") {
-      this.neighbors.push(grid[this.row - 1][this.column]);
-    }
-    // right
-    if (this.column < this.totalRows - 1 && grid[this.row][this.column + 1].type !== "Barrier") {
-      this.neighbors.push(grid[this.row][this.column + 1]);
-    }
-    // left
-    if (this.column > 0 && grid[this.row][this.column - 1].type !== "Barrier") {
-      this.neighbors.push(grid[this.row][this.column - 1]);
-    }
-  }
-}
+  return neighbors;
+};
 
 export const HeuristicScore = (x1: number, y1: number, x2: number, y2: number) => {
   return Math.abs(x1 - x2) + Math.abs(y1 - y2);
 };
 
-export const makeGrid = (size: number, width: number) => {
-  const grid: NodeModel[][] = [];
-  const gap = Math.floor(width / size);
-  for (let i = 0; i < size; i++) {
-    grid.push([]);
-    for (let j = 0; j < size; j++) {
-      const node = new NodeModel(i, j, gap, size);
-      grid[i].push(node);
+export const makeGridGraph = (itemsPerRow: number, gridSize: number) => {
+  const grid: GridGraph = {};
+  const gap = Math.floor(gridSize / itemsPerRow);
+  for (let i = 0; i < itemsPerRow; i++) {
+    for (let j = 0; j < itemsPerRow; j++) {
+      const node = initializeNodeModel(i, j, gap);
+      grid[node.key] = node;
     }
   }
   return grid;
 };
 
-export const makeNodeKey = (node: NodeModel) => `${node.row}_${node.column}`;
+export const makeNodeKey = (node: NodePosition) => `${node.row}_${node.column}`;
 
 export const parseNodeKey = (key: string) => key.split("_").map((str) => Number(str));
+
+export const isSameCoordinates = (a: NodePosition, b: NodePosition) => {
+  const matchingRow = a.row == b.row;
+  const matchingCol = a.column == b.column;
+  return matchingRow && matchingCol;
+};
+
+export const getNodePosition = (node: NodePosition) => [node.row, node.column];

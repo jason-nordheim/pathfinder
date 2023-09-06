@@ -1,17 +1,16 @@
 import { Grid } from "./components/Grid";
 import { Legend } from "./components/Legend";
-
-const SIZE = 40;
-const WIDTH = 550;
+import { DEFAULT_GRID_WIDTH, useAppSelector } from "./state";
 
 function App() {
+  const size = useAppSelector((state) => state.size);
   return (
     <div id="app" style={{ display: "flex", flexDirection: "column" }}>
       <div style={{ textAlign: "center", fontFamily: "sans-serif" }}>
         <h1>Pathfinder</h1>
       </div>
       <div id="grid-container" style={{ display: "flex", justifyContent: "center", padding: "1em" }}>
-        <aside style={{ width: WIDTH / 2, marginRight: "2em" }}>
+        <aside style={{ width: DEFAULT_GRID_WIDTH / 2, marginRight: "2em" }}>
           <div id="instructions">
             <h4 style={{ textAlign: "center", fontFamily: "sans-serif" }}>Instructions</h4>
             <ul style={{ fontFamily: "sans-serif", fontWeight: "lighter", fontSize: "0.95em" }}>
@@ -32,14 +31,14 @@ function App() {
               type="number"
               name="grid-size"
               id="grid-size"
-              value={SIZE}
+              value={size}
               style={{ fontFamily: "sans-serif" }}
             />
           </div>
         </aside>
-        <Grid size={SIZE} width={WIDTH} />
+        <Grid />
         <aside style={{ minWidth: "250px" }}>
-          <Legend size={SIZE} width={WIDTH} />
+          <Legend />
         </aside>
       </div>
     </div>
