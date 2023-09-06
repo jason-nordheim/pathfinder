@@ -1,5 +1,5 @@
 import { CSSProperties, FC, MouseEventHandler, useCallback, useEffect, useState } from "react";
-import { HeuristicScore, NODE_TYPE, NodeModel, NodeType, makeGrid, makeNodeKey, parseNodeKey } from "../lib/NodeModel";
+import { HeuristicScore, NodeModel, NodeType, makeGrid, makeNodeKey, parseNodeKey } from "../lib/NodeModel";
 import { ValueOf } from "ts-essentials";
 
 const STATUS = {
