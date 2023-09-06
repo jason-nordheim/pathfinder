@@ -16,7 +16,7 @@ const GridNode: FC<{
     width: size,
     backgroundColor: NODE_COLOR_MAP[model.type],
     border: "1px solid gray",
-    transition: "all",
+    transition: "0.5s ease",
   };
 
   return (
