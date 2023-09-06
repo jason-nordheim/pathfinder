@@ -1,3 +1,4 @@
+import { Controls } from "./components/Controls";
 import { Grid } from "./components/Grid";
 import { Legend } from "./components/Legend";
 import { DEFAULT_GRID_WIDTH, useAppSelector } from "./state";
@@ -39,6 +40,7 @@ function App() {
         <Grid />
         <aside style={{ minWidth: "250px" }}>
           <Legend />
+          <Controls />
         </aside>
       </div>
     </div>
