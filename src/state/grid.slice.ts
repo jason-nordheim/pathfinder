@@ -16,6 +16,7 @@ export const DEFAULT_STATE: GridState = {
   delay: 0,
   size: DEFAULT_GRID_WIDTH,
   itemsPerRow: DEFAULT_NODES_PER_ROW,
+  updateCount: 0,
 };
 
 export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => {
@@ -42,9 +43,12 @@ export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => 
       } else if (changes.type && changes.type === "End") {
         state.end = updatedNode;
       }
+      state.nodes = { ...state.nodes };
+      state.updateCount++;
     })
     .addCase(replaceNodes, (state, action) => {
       state.nodes = action.payload;
+      state.updateCount++;
     })
     .addCase(setStatus, (state, action) => {
       state.status = action.payload;
@@ -60,6 +64,7 @@ export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => 
         const [row, col] = parseNodeKey(key);
         state.nodes[key] = initializeNodeModel(row, col, nodeSize);
       }
+      state.updateCount++;
     });
 });
 
