@@ -43,8 +43,8 @@ gridMiddleware.startListening({
     }
 
     const changeNodeType = async (key: string, newType: NodeType) => {
-      delay && (await listenerApi.delay(delay));
-      listenerApi.dispatch(changeNode({ key, changes: { type: newType } }));
+      await listenerApi.delay(delay + 1);
+      await listenerApi.dispatch(changeNode({ key, changes: { type: newType } }));
     };
 
     // standardize adding to the queue
@@ -72,7 +72,9 @@ gridMiddleware.startListening({
     const [x2, y2] = getNodePosition(end);
     fScores.set(startKey, HeuristicScore(x1, y1, x2, y2));
 
-    while (openNodes.length) {
+    let done = false;
+
+    while (openNodes.length && !done) {
       const openNode = openNodes.shift();
       if (openNode?.model) {
         const current = openNode.model;
@@ -84,12 +86,12 @@ gridMiddleware.startListening({
           let currentKey: string | undefined = current.key;
           while (currentKey && cameFrom.has(currentKey)) {
             if (nodes[currentKey].type !== "End") {
-              changeNodeType(currentKey, "Path");
+              await changeNodeType(currentKey, "Path");
             }
             currentKey = cameFrom.get(currentKey);
           }
           setStatus("finished");
-          return;
+          done = true;
         }
 
         // have not reached the target node yet
@@ -115,7 +117,7 @@ gridMiddleware.startListening({
           }
         }
 
-        if (!isSameCoordinates(current, start)) {
+        if (!isSameCoordinates(current, start) && !done) {
           await changeNodeType(current.key, "Closed");
         }
       }

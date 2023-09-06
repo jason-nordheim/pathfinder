@@ -16,6 +16,7 @@ export const DEFAULT_STATE: GridState = {
   delay: 0,
   size: DEFAULT_GRID_WIDTH,
   itemsPerRow: DEFAULT_NODES_PER_ROW,
+  updates: 0,
 };
 
 export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => {
@@ -44,6 +45,7 @@ export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => 
     })
     .addCase(replaceNodes, (state, action) => {
       state.nodes = action.payload;
+      state.updates = state.updates++;
     })
     .addCase(setStatus, (state, action) => {
       state.status = action.payload;

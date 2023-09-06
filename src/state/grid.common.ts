@@ -13,6 +13,7 @@ export type GridState = {
   delay: number;
   size: number;
   itemsPerRow: number;
+  updates: number;
 };
 export type InitializeGridParams = { numPerRow: number; gridWidth: number };
 export type ChangeNodeParams = { key: string; changes: DeepPartial<NodeModel> };
