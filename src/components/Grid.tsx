@@ -52,7 +52,7 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
 
   useEffect(() => {
     setNodes(makeGrid(size, width));
-    makeRandomBarriers(60);
+    makeRandomBarriers(120);
   }, [size, width, makeRandomBarriers]);
 
   useEffect(() => {
@@ -89,12 +89,14 @@ export const Grid: FC<{ size: number; width: number }> = ({ size, width }) => {
       }
 
       const changeNodeType = (row: number, column: number, type: NodeType) => {
-        setNodes((curr) => {
-          // do not overwrite start and end node
-          if (curr[row][column].type === "Start") return curr;
-          if (curr[row][column].type === "End") return curr;
-          curr[row][column].setType(type);
-          return curr;
+        window.requestAnimationFrame(() => {
+          return setNodes((curr) => {
+            // do not overwrite start and end node
+            if (curr[row][column].type === "Start") return curr;
+            if (curr[row][column].type === "End") return curr;
+            curr[row][column].setType(type);
+            return curr;
+          });
         });
       };
 
