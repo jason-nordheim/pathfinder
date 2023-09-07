@@ -1,6 +1,5 @@
 import { FC } from "react";
 import { initializeGraph, searchGraph, useAppDispatch, useAppSelector } from "../state";
-import { WIDTH_THRESHOLDS } from "../common";
 
 // const NumberOfNodes = () => {
 //   const itemsPerRow = useAppSelector((state) => state.itemsPerRow);
@@ -19,20 +18,7 @@ import { WIDTH_THRESHOLDS } from "../common";
 //   );
 // };
 
-const Styles: { [k: number]: React.CSSProperties } = {
-  [WIDTH_THRESHOLDS.LG]: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    gap: "5px",
-    margin: "1em",
-  },
-  [WIDTH_THRESHOLDS.MD]: {
-    columnSpan: "all",
-  },
-};
-
-export const Controls: FC<{ threshold: number }> = ({ threshold }) => {
+export const Controls: FC = () => {
   const dispatch = useAppDispatch();
   const start = useAppSelector((state) => state.start);
   const end = useAppSelector((state) => state.end);
@@ -48,7 +34,10 @@ export const Controls: FC<{ threshold: number }> = ({ threshold }) => {
   };
 
   return (
-    <div id="controls" style={Styles[threshold]}>
+    <div
+      id="controls"
+      style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "5px", margin: "1em" }}
+    >
       <h4 style={{ textAlign: "center" }}>Controls</h4>
       <button
         disabled={(!start && !end) || status == "working"}
