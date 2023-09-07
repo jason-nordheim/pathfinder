@@ -1,6 +1,6 @@
 import { createListenerMiddleware } from "@reduxjs/toolkit";
 import { GridState, OpenNode, sortPriority } from "./grid.common";
-import { changeNode, initializeGraph, replaceNodes, searchGraph, setBarriers, setStatus } from "./grid.actions";
+import { changeNode, replaceNodes, searchGraph, setBarriers, setStatus } from "./grid.actions";
 import {
   HeuristicScore,
   KeyedNodePosition,
@@ -9,7 +9,6 @@ import {
   getNodeNeighbors,
   getNodePosition,
   isSameCoordinates,
-  makeGridGraph,
   makeNodeKey,
 } from "../lib/NodeModel";
 
@@ -19,7 +18,7 @@ const gridMiddleware = createListenerMiddleware<GridState>();
 gridMiddleware.startListening({
   actionCreator: searchGraph,
   effect: async (_, listenerApi) => {
-    const { nodes, delay, end, start, size } = listenerApi.getState();
+    const { nodes, delay, end, start, itemsPerRow } = listenerApi.getState();
     // guard
     if (end === undefined || start === undefined) {
       console.warn("Missing either start or end node");
@@ -98,7 +97,7 @@ gridMiddleware.startListening({
         const currentKey = makeNodeKey(current);
 
         // inspect neighbors
-        const neighbors = getNodeNeighbors(current, nodes, size);
+        const neighbors = getNodeNeighbors(current, nodes, itemsPerRow);
         for (const n of neighbors) {
           const gScoreCurrentNode = gScores.get(currentKey);
           const tentativeScore = gScoreCurrentNode! + 1;
@@ -126,18 +125,18 @@ gridMiddleware.startListening({
   },
 });
 
-/** on initialize graph, recreate the nodes:
- *  executed as an effect to run async as this could
- *  execute slowly if the graph is large enough
- */
-gridMiddleware.startListening({
-  actionCreator: initializeGraph,
-  effect: async (action, listenerApi) => {
-    const { gridWidth, numPerRow } = action.payload;
-    const nodes = makeGridGraph(numPerRow, gridWidth);
-    listenerApi.dispatch(replaceNodes(nodes));
-  },
-});
+// /** on initialize graph, recreate the nodes:
+//  *  executed as an effect to run async as this could
+//  *  execute slowly if the graph is large enough
+//  */
+// gridMiddleware.startListening({
+//   actionCreator: initializeGraph,
+//   effect: async (action, listenerApi) => {
+//     const { numPerRow } = action.payload;
+//     const nodes = makeGridGraph(numPerRow, gridWidth);
+//     listenerApi.dispatch(replaceNodes(nodes));
+//   },
+// });
 
 /** check for barriers when replacing nodes */
 // gridMiddleware.startListening({
