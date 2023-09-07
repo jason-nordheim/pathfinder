@@ -17,8 +17,7 @@ const Styles: { [k: number]: React.CSSProperties } = {
   },
   [WIDTH_THRESHOLDS.MD]: {
     display: "gird",
-    gridTemplateColumns: "60% 40%",
-    gridTemplateRows: "repeat(1, auto)",
+    gridAutoColumns: "auto",
   },
 };
 
