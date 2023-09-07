@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 export const useResizeListener = (effect: () => void) => {
   useEffect(() => {
@@ -9,7 +9,13 @@ export const useResizeListener = (effect: () => void) => {
 
 export const useLoadListener = (effect: () => void) => {
   useEffect(() => {
-    window.addEventListener("DOMContentLoaded", effect);
-    return () => window.removeEventListener("DOMContentLoaded", effect);
+    window.addEventListener("load", effect);
+    return () => window.removeEventListener("load", effect);
+  }, [effect]);
+};
+
+export const useMount = (effect: () => void) => {
+  useEffect(() => {
+    effect();
   }, [effect]);
 };
