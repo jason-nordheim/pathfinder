@@ -1,105 +1,33 @@
 import { FC } from "react";
-import { NODE_COLORS } from "../lib/NodeModel";
-import { useAppSelector } from "../state";
-
-const LEGEND_ITEM_STYLES: React.CSSProperties = {
-  boxSizing: "border-box",
-  display: "flex",
-  gap: "0.5em",
-  justifyContent: "space-between",
-};
 
 export const Legend: FC = () => {
-  const itemsPerRow = useAppSelector((state) => state.itemsPerRow);
-  const widthOfGrid = useAppSelector((state) => state.size);
-  const gridItemSize = Math.floor(widthOfGrid / itemsPerRow);
-
   return (
-    <div
-      id="grid-legend"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "1em",
-        flexDirection: "column",
-        fontSize: "0.95em",
-        fontFamily: "sans-serif",
-        fontWeight: "lighter",
-      }}
-    >
+    <div id="grid-legend">
       <h3>Legend</h3>
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <span style={LEGEND_ITEM_STYLES}>
+      <div style={{ display: "grid", gridTemplateRows: "repeat(6, 1fr)" }}>
+        <span className="legend-item">
           <span>Closed</span>
-          <span
-            id="legend-red"
-            style={{
-              boxSizing: "border-box",
-              width: gridItemSize,
-              height: gridItemSize,
-              backgroundColor: NODE_COLORS.RED,
-            }}
-          />
+          <span id="legend-closed" className={"closed"} />
         </span>
-        <span style={LEGEND_ITEM_STYLES}>
+        <span className="legend-item">
           <span>Open</span>
-          <span
-            id="legend-red"
-            style={{
-              boxSizing: "border-box",
-              width: gridItemSize,
-              height: gridItemSize,
-              backgroundColor: NODE_COLORS.GREEN,
-            }}
-          />
+          <span id="legend-open" className="open" />
         </span>
-        <span style={LEGEND_ITEM_STYLES}>
+        <span className="legend-item">
           <span>Barrier</span>
-          <span
-            id="legend-red"
-            style={{
-              boxSizing: "border-box",
-              width: gridItemSize,
-              height: gridItemSize,
-              backgroundColor: NODE_COLORS.BLACK,
-            }}
-          />
+          <span id="legend-barrier" className="barrier" />
         </span>
-        <span style={LEGEND_ITEM_STYLES}>
+        <span className="legend-item">
           <span>Start</span>
-          <span
-            id="legend-red"
-            style={{
-              boxSizing: "border-box",
-              width: gridItemSize,
-              height: gridItemSize,
-              backgroundColor: NODE_COLORS.ORANGE,
-            }}
-          />
+          <span id="legend-start" className="start" />
         </span>
-        <span style={LEGEND_ITEM_STYLES}>
+        <span className="legend-item">
           <span>End</span>
-          <span
-            id="legend-red"
-            style={{
-              boxSizing: "border-box",
-              width: gridItemSize,
-              height: gridItemSize,
-              backgroundColor: NODE_COLORS.TURQUOISE,
-            }}
-          />
+          <span id="legend-end" className="end" />
         </span>
-        <span style={LEGEND_ITEM_STYLES}>
+        <span className="legend-item">
           <span>Path</span>
-          <span
-            id="legend-red"
-            style={{
-              boxSizing: "border-box",
-              width: gridItemSize,
-              height: gridItemSize,
-              backgroundColor: NODE_COLORS.PURPLE,
-            }}
-          />
+          <span id="legend-path" className="path" />
         </span>
       </div>
     </div>

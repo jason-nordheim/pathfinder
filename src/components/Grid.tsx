@@ -1,29 +1,18 @@
-import { CSSProperties, FC, MouseEventHandler, useEffect } from "react";
-import { NODE_COLOR_MAP, NodeModel, isSameCoordinates } from "../lib/NodeModel";
+import { FC, MouseEventHandler, useEffect } from "react";
+import { NodeModel, isSameCoordinates } from "../lib/NodeModel";
 import { changeNode, resetNode, searchGraph, useAppDispatch, useAppSelector } from "../state";
+import cx from "classnames";
 
 const GridNode: FC<{
   model: NodeModel;
   onClick: MouseEventHandler;
   onContextMenu: MouseEventHandler;
-  size: number;
-}> = ({ model, onClick, onContextMenu, size }) => {
-  const style: CSSProperties = {
-    position: "absolute",
-    top: model.x,
-    left: model.y,
-    height: size,
-    width: size,
-    backgroundColor: NODE_COLOR_MAP[model.type],
-    border: "1px solid gray",
-    transition: "0.5s ease",
-  };
-
+}> = ({ model, onClick, onContextMenu }) => {
   return (
     <div
-      className="node"
-      aria-label={`node-${model.x}-${model.y}`}
-      style={style}
+      className={cx("node", model.type.toLowerCase())}
+      aria-label={`node-${model.row}-${model.column}`}
+      style={{ display: "grid" }}
       onClick={onClick}
       onContextMenu={onContextMenu}
     ></div>
@@ -35,10 +24,8 @@ export const Grid = () => {
   const end = useAppSelector((state) => state.end);
   const start = useAppSelector((state) => state.start);
   const nodes = useAppSelector((state) => state.nodes);
-  const size = useAppSelector((state) => state.size);
   const nodesPerRow = useAppSelector((state) => state.itemsPerRow);
   const status = useAppSelector((state) => state.status);
-  const nodeSize = Math.floor(size / nodesPerRow);
 
   useEffect(() => {
     const findShortestPath = (e: KeyboardEvent) => {
@@ -74,16 +61,16 @@ export const Grid = () => {
     <div
       id="grid"
       style={{
-        position: "relative",
+        zIndex: 1,
         boxSizing: "border-box",
-        display: "block",
-        width: size,
-        height: size,
-        gridTemplateRows: "auto",
-        gridTemplateColumns: "auto",
-        transition: "all",
-        gap: "0px",
+        display: "grid",
+        gridTemplateColumns: `repeat(${nodesPerRow}, 1fr)`,
+        gridTemplateRows: `repeat(${nodesPerRow}, 1fr)`,
+        aspectRatio: "1/1",
         cursor: status === "working" ? "not-allowed" : "auto",
+        border: "1px solid black",
+        maxWidth: "1000px",
+        margin: "0 auto",
       }}
     >
       {Object.values(nodes).map((node) => {
@@ -91,7 +78,6 @@ export const Grid = () => {
           <GridNode
             key={node.key}
             model={node}
-            size={nodeSize}
             onClick={() => handleNodeSelect(node)}
             onContextMenu={(e) => {
               e.preventDefault();

@@ -1,48 +1,59 @@
 import { Controls } from "./components/Controls";
 import { Grid } from "./components/Grid";
+import { Instructions } from "./components/Instructions";
 import { Legend } from "./components/Legend";
-import { DEFAULT_GRID_WIDTH, useAppSelector } from "./state";
+import "./App.css";
+import { DEFAULT_NODES_PER_ROW, initializeGraph, useAppDispatch, useAppSelector } from "./state";
+import { useLoadListener, useMount, useResizeListener } from "./hooks";
+import { useState } from "react";
+import { WIDTH_THRESHOLDS } from "./common";
+
+const Styles: { [k: number]: React.CSSProperties } = {
+  [WIDTH_THRESHOLDS.LG]: {
+    display: "grid",
+    gridTemplateColumns: "50% 20% 30%",
+    maxWidth: "1000px",
+    margin: "0 auto",
+  },
+  [WIDTH_THRESHOLDS.MD]: {
+    display: "gird",
+    gridAutoColumns: "auto",
+  },
+};
 
 function App() {
-  const nodes = useAppSelector((state) => state.nodes);
+  const [widthThreshold, setWidthThreshold] = useState(800);
+  const nodesPerRow = useAppSelector((state) => state.itemsPerRow);
+  const dispatch = useAppDispatch();
+
+  const handleResize = () => {
+    const width = window.innerWidth;
+    if (width >= WIDTH_THRESHOLDS.LG && nodesPerRow != DEFAULT_NODES_PER_ROW) {
+      setWidthThreshold(WIDTH_THRESHOLDS.LG);
+      dispatch(initializeGraph({ numPerRow: DEFAULT_NODES_PER_ROW }));
+    } else if (width < WIDTH_THRESHOLDS.LG && width > WIDTH_THRESHOLDS.MD && nodesPerRow != 20) {
+      setWidthThreshold(WIDTH_THRESHOLDS.MD);
+      dispatch(initializeGraph({ numPerRow: 20 }));
+    }
+  };
+
+  useLoadListener(handleResize);
+  useResizeListener(handleResize);
+  useMount(handleResize);
 
   return (
-    <div id="app" style={{ display: "flex", flexDirection: "column" }}>
-      <div style={{ textAlign: "center", fontFamily: "sans-serif" }}>
+    <div id="app">
+      <div className="app-title-container">
         <h1>Pathfinder</h1>
       </div>
-      <div id="grid-container" style={{ display: "flex", justifyContent: "center", padding: "1em" }}>
-        <aside style={{ width: DEFAULT_GRID_WIDTH / 2, marginRight: "2em" }}>
-          <div id="instructions">
-            <h4 style={{ textAlign: "center", fontFamily: "sans-serif" }}>Instructions</h4>
-            <ol style={{ fontFamily: "sans-serif", fontWeight: "lighter", fontSize: "0.95em" }}>
-              <li>Use the left mouse button to add nodes to the grid.</li>
-              <li>The first click will add the start node.</li>
-              <li>The second click will add the end node.</li>
-              <li>Any subsequent clicks will add barriers.</li>
-              <li>
-                Once satisfied with the placement of the start/end nodes and any barriers, press the space bar to start
-                running the algorithm for finding the shortest path
-              </li>
-            </ol>
-          </div>
-          <div style={{ backgroundColor: "white", padding: "1em", fontFamily: "sans-serif" }}>
-            <label htmlFor="grid-size">Grid Size: </label>
-            <input
-              disabled
-              type="number"
-              name="grid-size"
-              id="grid-size"
-              value={Math.sqrt(Object.keys(nodes).length)}
-              style={{ fontFamily: "sans-serif" }}
-            />
-          </div>
-        </aside>
-        <Grid />
-        <aside style={{ minWidth: "250px" }}>
+      <div id="app-content">
+        <aside style={Styles[widthThreshold]}>
+          <Instructions />
           <Legend />
           <Controls />
         </aside>
+        <Grid />
+        <aside></aside>
       </div>
     </div>
   );
