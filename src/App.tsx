@@ -50,7 +50,7 @@ function App() {
         <aside style={Styles[widthThreshold]}>
           <Instructions />
           <Legend />
-          <Controls threshold={widthThreshold} />
+          <Controls />
         </aside>
         <Grid />
         <aside></aside>
