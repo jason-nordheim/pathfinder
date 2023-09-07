@@ -41,6 +41,7 @@ export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => 
       } else if (changes.type && changes.type === "End") {
         state.end = updatedNode;
       }
+      state.updates++;
     })
     .addCase(replaceNodes, (state, action) => {
       state.nodes = action.payload;
@@ -57,6 +58,7 @@ export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => 
       } else {
         const [row, col] = parseNodeKey(key);
         state.nodes[key] = initializeNodeModel(row, col);
+        state.updates++;
       }
     });
 });

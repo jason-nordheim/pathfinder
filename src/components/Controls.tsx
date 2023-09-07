@@ -24,6 +24,7 @@ export const Controls: FC = () => {
   const end = useAppSelector((state) => state.end);
   const status = useAppSelector((state) => state.status);
   const nodesPerRow = useAppSelector((state) => state.itemsPerRow);
+  const updates = useAppSelector((state) => state.updates);
 
   const handleRun = () => {
     dispatch(searchGraph());
@@ -46,11 +47,7 @@ export const Controls: FC = () => {
       >
         Find Path
       </button>
-      <button
-        disabled={(!start && !end) || status == "working"}
-        onClick={handleReset}
-        aria-label="find the shortest path"
-      >
+      <button disabled={status == "working" || updates == 0} onClick={handleReset} aria-label="find the shortest path">
         Reset
       </button>
     </div>
