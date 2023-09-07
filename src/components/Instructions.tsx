@@ -1,7 +1,7 @@
 export const Instructions = () => {
   return (
     <div id="instructions">
-      <h4>Instructions</h4>
+      <h4 className="instruction-title">Instructions</h4>
       <ul>
         <li>Use the left mouse button to add nodes to the grid.</li>
         <li>The first click will add the start node.</li>

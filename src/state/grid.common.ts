@@ -11,11 +11,10 @@ export type GridState = {
   barriers: KeyedNodePosition[];
   status: GridStatus;
   delay: number;
-  size: number;
   itemsPerRow: number;
   updates: number;
 };
-export type InitializeGridParams = { numPerRow: number; gridWidth: number };
+export type InitializeGridParams = { numPerRow: number };
 export type ChangeNodeParams = { key: string; changes: DeepPartial<NodeModel> };
 
 export const sortPriority = (a: OpenNode, b: OpenNode) =>

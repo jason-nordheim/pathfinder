@@ -5,16 +5,14 @@ import { changeNode, initializeGraph, replaceNodes, resetNode, setStatus } from 
 import { initializeNodeModel, makeGridGraph, parseNodeKey } from "../lib/NodeModel";
 
 export const DEFAULT_NODES_PER_ROW = 40;
-export const DEFAULT_GRID_WIDTH = 550;
 
 export const DEFAULT_STATE: GridState = {
-  nodes: makeGridGraph(DEFAULT_NODES_PER_ROW, DEFAULT_GRID_WIDTH),
+  nodes: makeGridGraph(DEFAULT_NODES_PER_ROW),
   barriers: [],
   start: undefined,
   end: undefined,
   status: "idle",
   delay: 0,
-  size: DEFAULT_GRID_WIDTH,
   itemsPerRow: DEFAULT_NODES_PER_ROW,
   updates: 0,
 };
@@ -22,12 +20,13 @@ export const DEFAULT_STATE: GridState = {
 export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => {
   builder
     .addCase(initializeGraph, (state, action) => {
+      state.nodes = makeGridGraph(action.payload.numPerRow);
       state.status = "idle";
       state.barriers = [];
       state.start = undefined;
       state.end = undefined;
-      state.size = action.payload.gridWidth;
       state.itemsPerRow = action.payload.numPerRow;
+      state.updates = 0;
     })
     .addCase(changeNode, (state, action) => {
       if (state.status === "working") return;
@@ -52,14 +51,12 @@ export const gridReducer = createReducer<GridState>(DEFAULT_STATE, (builder) => 
     })
     .addCase(resetNode, (state, action) => {
       const key = action.payload;
-      const { size, itemsPerRow } = state;
       const node = state.nodes[key];
       if (!node) {
         console.warn("Reset Node Failed: Cannot find node");
       } else {
-        const nodeSize = Math.floor(size / itemsPerRow);
         const [row, col] = parseNodeKey(key);
-        state.nodes[key] = initializeNodeModel(row, col, nodeSize);
+        state.nodes[key] = initializeNodeModel(row, col);
       }
     });
 });
