@@ -5,9 +5,16 @@ export const useDynamicNodeSize = (gridWidth: number, nodesPerRow: number) => {
   return nodeSize;
 };
 
-export const useResizeListener = ({ onResize }: { onResize: () => void }) => {
+export const useResizeListener = (effect: () => void) => {
   useEffect(() => {
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("reset", onResize);
-  }, [onResize]);
+    window.addEventListener("resize", effect);
+    return () => window.removeEventListener("reset", effect);
+  }, [effect]);
+};
+
+export const useLoadListener = (effect: () => void) => {
+  useEffect(() => {
+    window.addEventListener("DOMContentLoaded", effect);
+    return () => window.removeEventListener("DOMContentLoaded", effect);
+  }, [effect]);
 };
