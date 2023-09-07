@@ -1,21 +1,21 @@
 import { searchGraph, useAppDispatch, useAppSelector } from "../state";
 
-const NumberOfNodes = () => {
-  const itemsPerRow = useAppSelector((state) => state.itemsPerRow);
-  return (
-    <div style={{ backgroundColor: "white", padding: "1em", fontFamily: "sans-serif" }}>
-      <label htmlFor="grid-size">Grid Size: </label>
-      <input
-        disabled
-        type="number"
-        name="grid-size"
-        id="grid-size"
-        value={itemsPerRow}
-        style={{ fontFamily: "sans-serif" }}
-      />
-    </div>
-  );
-};
+// const NumberOfNodes = () => {
+//   const itemsPerRow = useAppSelector((state) => state.itemsPerRow);
+//   return (
+//     <div style={{ backgroundColor: "white", padding: "1em", fontFamily: "sans-serif" }}>
+//       <label htmlFor="grid-size">Grid Size: </label>
+//       <input
+//         disabled
+//         type="number"
+//         name="grid-size"
+//         id="grid-size"
+//         value={itemsPerRow}
+//         style={{ fontFamily: "sans-serif" }}
+//       />
+//     </div>
+//   );
+// };
 
 export const Controls = () => {
   const dispatch = useAppDispatch();
