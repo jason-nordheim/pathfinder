@@ -31,7 +31,7 @@ function App() {
     if (width >= WIDTH_THRESHOLDS.LG && nodesPerRow != DEFAULT_NODES_PER_ROW) {
       setWidthThreshold(WIDTH_THRESHOLDS.LG);
       dispatch(initializeGraph({ numPerRow: DEFAULT_NODES_PER_ROW }));
-    } else if (width < WIDTH_THRESHOLDS.LG && width > WIDTH_THRESHOLDS.MD && nodesPerRow != 20) {
+    } else if (width < WIDTH_THRESHOLDS.LG && nodesPerRow != 20) {
       setWidthThreshold(WIDTH_THRESHOLDS.MD);
       dispatch(initializeGraph({ numPerRow: 20 }));
     }
