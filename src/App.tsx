@@ -35,7 +35,6 @@ function App() {
       setWidthThreshold(WIDTH_THRESHOLDS.MD);
       dispatch(initializeGraph({ numPerRow: 20 }));
     }
-    console.log({ windowWidth: width });
   };
 
   useLoadListener(handleResize);
