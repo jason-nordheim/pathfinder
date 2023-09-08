@@ -89,7 +89,7 @@ gridMiddleware.startListening({
             }
             currentKey = cameFrom.get(currentKey);
           }
-          setStatus("finished");
+          listenerApi.dispatch(setStatus("finished"));
           done = true;
         }
 
@@ -120,8 +120,8 @@ gridMiddleware.startListening({
           await changeNodeType(current.key, "Closed");
         }
       }
+      listenerApi.dispatch(setStatus("finished"));
     }
-    setStatus("finished");
   },
 });
 
